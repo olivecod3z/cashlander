@@ -1,0 +1,29 @@
+import 'package:cash_lander2/src/routing/app_router.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+// import 'package:get/get.dart';
+// import 'package:go_router/go_router.dart';
+void main() {
+  runApp(const MainApp());
+}
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp.router(
+          routerConfig: appRouter,
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Campton'),
+        );
+      },
+    );
+  }
+}
