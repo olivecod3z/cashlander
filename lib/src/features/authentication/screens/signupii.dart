@@ -57,7 +57,7 @@ class CreateAccount extends StatelessWidget {
                         fontWeight: FontWeight.w400,
                         color:
                             authController.isPasswordValid.value
-                                ? Colors.black
+                                ? textColor2
                                 : Colors.red,
                       ),
                       textAlign: TextAlign.justify,

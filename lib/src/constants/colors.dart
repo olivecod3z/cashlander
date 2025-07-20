@@ -12,6 +12,7 @@ const btnColor4 = Color(0xFFE6F6FF);
 //TEXT COLORS
 //text colors for headings, subheadings, and body text
 const textColor1 = Color.fromARGB(255, 27, 34, 48);
+const subColor = Color(0xFF4D4D4D);
 
 //password info text, ...
 const textColor2 = Color.fromARGB(255, 51, 51, 52);

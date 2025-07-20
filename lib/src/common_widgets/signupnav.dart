@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:get/get.dart';
 
 class SignUpNav extends StatelessWidget {
   const SignUpNav({super.key, required this.authController});
 
-  final SignupController authController; // Changed to SignupController
-  // final AuthController authController;
+  final SignupController authController;
 
   @override
   Widget build(BuildContext context) {
@@ -41,17 +41,59 @@ class SignUpNav extends StatelessWidget {
           // Flexible spacer
           const Expanded(child: SizedBox()),
 
-          ElevatedButton(
-            onPressed: () => authController.validateAndContinue(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: btnColor1, // Use your primary button color
-              foregroundColor: Colors.white,
-              minimumSize: Size(80.w, 40.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+          // Next button with loading state
+          Obx(
+            () => ElevatedButton(
+              onPressed:
+                  authController.isLoading.value
+                      ? null // Disable button when loading
+                      : () {
+                        print('🔍 SignUp Next button clicked!');
+                        print(
+                          '📧 Email: ${authController.emailController.text}',
+                        );
+                        print(
+                          '🔒 Password: ${authController.passwordController.text.isNotEmpty ? "***entered***" : "empty"}',
+                        );
+                        print(
+                          '🔒 Confirm: ${authController.confirmPasswordController.text.isNotEmpty ? "***entered***" : "empty"}',
+                        );
+
+                        authController.validateAndContinue(context);
+                      },
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    authController.isLoading.value
+                        ? btnColor1.withOpacity(
+                          0.7,
+                        ) // Slightly faded when loading
+                        : btnColor1,
+                foregroundColor: Colors.white,
+                minimumSize: Size(80.w, 40.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
+              child:
+                  authController.isLoading.value
+                      ? SizedBox(
+                        height: 16.h,
+                        width: 16.w,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                      : Text(
+                        'Next',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
             ),
-            child: Text('Next'),
           ),
         ],
       ),

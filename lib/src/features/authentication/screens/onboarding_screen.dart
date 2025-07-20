@@ -149,7 +149,7 @@ class OnboardingScreen extends StatelessWidget {
                               padding: EdgeInsets.symmetric(horizontal: 20.w),
                               child: ElevatedButton(
                                 onPressed: () {
-                                  context.push('/signup');
+                                  context.push('/login');
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: btnColor4, // Very light blue
