@@ -1,16 +1,10 @@
-//import 'package:cash_lander2/src/constants/images.dart';
 import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/constants/text.dart';
-//import 'package:cash_lander2/src/features/authentication/controllers/onboarding_controller.dart';
+
 import 'package:cash_lander2/src/features/authentication/models/model_onboarding.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-//import 'package:get/get_core/src/get_main.dart';
-// import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-// import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-// import 'package:get/get.dart';
-// import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class OnboardWidget extends StatelessWidget {
   const OnboardWidget({
@@ -25,40 +19,16 @@ class OnboardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //final controller = Get.find<OnboardingController>();
-
     return Obx(() {
       bool isLastPage = currentPage.value == totalPages - 1;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
-          // mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             //LOGO TEXT
             SizedBox(height: 50.h),
-            // Text(
-            //   logoText,
-            //   textAlign: TextAlign.center,
-            //   style: TextStyle(
-            //     letterSpacing: -1.sp,
-            //     fontSize: 22.sp,
-            //     fontWeight: FontWeight.bold,
-            //     //color: Colors.white,
-            //     foreground:
-            //         Paint()
-            //           ..shader =
-            //               LinearGradient(
-            //                     colors: [
-            //                       btnColor1,
-            //                       const Color.fromARGB(255, 56, 191, 248),
-            //                     ],
-            //                     begin: Alignment.centerLeft,
-            //                     end: Alignment.centerRight,
-            //                   ).createShader(Rect.fromLTWH(0, 0, 400, 60))
-            //                   as Shader?,
-            //   ),
-            // ),
+
             ShaderMask(
               shaderCallback:
                   (bounds) => LinearGradient(

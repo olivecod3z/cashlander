@@ -2,7 +2,6 @@ import 'package:cash_lander2/src/constants/text.dart';
 import 'package:cash_lander2/src/services/firebase_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserNameController extends GetxController {
   final TextEditingController userNameController = TextEditingController();

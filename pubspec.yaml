@@ -1,6 +1,6 @@
 name: cash_lander2
 description: A new Flutter project.
-publish_to: 'none' # This prevents accidental publishing to pub.dev
+publish_to: "none" # This prevents accidental publishing to pub.dev
 version: 0.1.0
 
 environment:
@@ -22,6 +22,9 @@ dependencies:
   firebase_storage: ^12.4.9
   cloud_functions: ^5.6.1
   http: ^1.4.0
+  phosphor_flutter: ^2.1.0
+  percent_indicator: ^4.2.5
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
@@ -31,15 +34,35 @@ dev_dependencies:
 flutter_native_splash:
   color: "#FFFFFF"
   color_dark: "#0124D3"
-  image: assets/images/logo2.png
-  image_dark: assets/images/logo2.png
+  image: assets/images/logo.png
+  image_dark: assets/images/logo.png
+
+  # Add these parameters to control image quality and sizing
+  fill: false # Don't stretch image to fill screen
+  fullscreen: false # Keep status bar visible
+
+  # Control image positioning and sizing
+  android_gravity: center # center, top, bottom, left, right
+  ios_content_mode: scaleAspectFit # scaleAspectFit, scaleAspectFill, center
+
+  # Web specific settings for better quality
+  web_image_mode: center # center, contain, cover, fill, fitHeight, fitWidth
+
+  # Platform-specific configurations for better quality
+  android:
+    image: assets/images/logo.png
+    gravity: center
+
+  ios:
+    image: assets/images/logo.png
+    content_mode: scaleAspectFit
 
   android_12:
-    image: assets/images/logo2.png
+    image: assets/images/logo.png
     icon_background_color: "#FFFFFF"
-    image_dark: assets/images/logo2.png
+    image_dark: assets/images/logo.png
     icon_background_color_dark: "#0124D3"
-
+    image_positioning: center
 
 flutter:
   uses-material-design: true

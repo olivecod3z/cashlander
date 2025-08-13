@@ -257,11 +257,6 @@ class FirebaseService extends GetxService {
     try {
       print('FirebaseService: Checking username availability for: $username');
 
-      // Check if Firestore is accessible
-      if (_firestore == null) {
-        throw 'Firestore not initialized';
-      }
-
       final querySnapshot =
           await _firestore
               .collection('users')

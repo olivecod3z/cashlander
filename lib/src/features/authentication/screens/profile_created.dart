@@ -3,6 +3,7 @@ import 'package:cash_lander2/src/constants/images.dart';
 import 'package:cash_lander2/src/constants/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 class ProfileCreated extends StatefulWidget {
   const ProfileCreated({super.key});
@@ -224,7 +225,7 @@ class _ProfileCreatedState extends State<ProfileCreated>
                                 // Add button press animation
                                 _animateButtonPress();
                                 // Your navigation logic here
-                                // context.push('/next-page');
+                                context.push('/dashboard');
                               },
                               borderRadius: BorderRadius.circular(24.r),
                               child: Center(

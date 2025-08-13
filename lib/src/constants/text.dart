@@ -47,3 +47,7 @@ const String userNameErrorText2 =
 //profile created
 const String profileText1 = 'Profile Created!';
 const String profileText2 = 'You’ve created a basic Cashlander profile';
+const String loginText = 'Hey there!';
+
+//Dashboard texts
+const String dashText1 = 'Level up your saving habits';

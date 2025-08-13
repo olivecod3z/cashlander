@@ -96,7 +96,7 @@ class OnboardingScreen extends StatelessWidget {
                     controller.currentPage.value == pages.length - 1
                         ? Column(
                           children: [
-                            // First button with gradient
+                            // First button with gradient and pressed effect
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 20.w),
                               child: Container(
@@ -128,6 +128,10 @@ class OnboardingScreen extends StatelessWidget {
                                       context.push('/signup');
                                     },
                                     borderRadius: BorderRadius.circular(24.r),
+                                    splashColor: Colors.black.withOpacity(0.2),
+                                    highlightColor: Colors.black.withOpacity(
+                                      0.1,
+                                    ),
                                     child: Center(
                                       child: Text(
                                         btnText1,

@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 // import 'package:get/get.dart';
 // import 'package:go_router/go_router.dart';
 void main() async {
+  
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();

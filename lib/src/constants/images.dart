@@ -6,3 +6,4 @@ const String onboardingImage4 = 'assets/images/cash_onboard4.jpg';
 
 const String profileImage = 'assets/images/profile_created.jpg';
 const String logoImg = 'assets/images/logo.png';
+const String avatarImg = 'assets/images/avatar2.png';
