@@ -87,10 +87,21 @@ class BudgetBars extends StatelessWidget {
         Positioned(
           left: 14.w,
           top: 40.h,
-          child: Text(
-            '\$${NumberFormat.compact().format(amountSaved)}',
+          child: Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(
+                  text: '\u20A6', // ₦
+                  style: TextStyle(fontFamily: 'Roboto'),
+                ),
+                TextSpan(
+                  text: NumberFormat.compact().format(amountSaved),
+                  style: const TextStyle(fontFamily: 'Campton'),
+                ),
+              ],
+            ),
             style: TextStyle(
-              color: Color(0xFF118E00),
+              color: const Color(0xFF118E00),
               fontWeight: FontWeight.w600,
               fontSize: 9.sp,
             ),
@@ -100,10 +111,21 @@ class BudgetBars extends StatelessWidget {
         Positioned(
           left: 100.w,
           top: 40.h,
-          child: Text(
-            '\$${NumberFormat.compact().format(targetAmount)}',
+          child: Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(
+                  text: '\u20A6', // ₦
+                  style: TextStyle(fontFamily: 'Roboto'),
+                ),
+                TextSpan(
+                  text: NumberFormat.compact().format(targetAmount),
+                  style: const TextStyle(fontFamily: 'Campton'),
+                ),
+              ],
+            ),
             style: TextStyle(
-              color: Colors.black,
+              color: const Color(0xFF118E00),
               fontWeight: FontWeight.w600,
               fontSize: 9.sp,
             ),

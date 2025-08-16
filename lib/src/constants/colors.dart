@@ -25,6 +25,7 @@ const theTitle = Color.fromRGBO(51, 51, 51, 1);
 //textfield color
 const textFieldColor = Color(0xFFE0E0E0);
 const bgColor1 = Color(0xFFF2F2F2);
+const bgColor2 = Color(0xFFF8F8F8);
 const progressColor = Color(0xFF00FF33);
 const textColor4 = Color(0xFF45413C);
 //Caategory colorsconst

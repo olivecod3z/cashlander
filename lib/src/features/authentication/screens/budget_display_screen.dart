@@ -1,4 +1,3 @@
-//This is the screen that displays the budget after creating and setting it
 import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/budget_display_controller.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/toggle_controller.dart';
@@ -62,7 +61,7 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
     final toggleController = Get.put(ToggleController());
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor2,
 
       floatingActionButton: Positioned(
         bottom: 100.h, // Above the navbar
@@ -123,8 +122,8 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                 SizedBox(height: 10.h),
                 _buildBudgetGrid(),
                 SizedBox(height: 32.h),
-                _buildSuccessMessage(),
-                SizedBox(height: 80.h), // Extra space for FAB
+                // _buildSuccessMessage(),
+                // SizedBox(height: 80.h), // Extra space for FAB
               ],
             ),
           ),
@@ -153,7 +152,7 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
         ),
         const Spacer(),
         Text(
-          'Budget Created',
+          '< This Month >',
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.w600,
@@ -202,14 +201,10 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-        ],
+        border: Border.all(
+          color: const Color.fromARGB(68, 200, 199, 199),
+          width: 1,
+        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -277,14 +272,31 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
             center: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  '\$${budgetAmount.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    fontSize: 11.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '\u20A6', // Naira symbol
+                        style: TextStyle(
+                          fontFamily: 'Roboto', // Fallback font that supports ₦
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                      TextSpan(
+                        text: budgetAmount.toStringAsFixed(0),
+                        style: TextStyle(
+                          fontFamily: 'Campton',
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+
                 if (spentAmount > 0)
                   Text(
                     '${(progressPercentage * 100).toStringAsFixed(0)}%',
@@ -338,45 +350,6 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
           //   ),
         ],
         // ],
-      ),
-    );
-  }
-
-  /// Success Message
-  Widget _buildSuccessMessage() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.green[200]!, width: 1),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 24.w,
-            height: 24.h,
-            decoration: BoxDecoration(
-              color: Colors.green[500],
-              shape: BoxShape.circle,
-            ),
-            child: const Center(
-              child: Icon(Icons.check, color: Colors.white, size: 16),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              'Budget successfully created! Start tracking your expenses.',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: Colors.green[700],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

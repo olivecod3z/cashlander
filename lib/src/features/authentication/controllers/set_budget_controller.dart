@@ -22,7 +22,7 @@ class SetBudgetController extends GetxController {
     selectedPeriod.value = 'Monthly'; // Reset period
   }
 
-  void saveBudget(BuildContext context) {
+  void saveBudget(BuildContext context) async {
     if (budgetController.text.isEmpty) {
       Get.snackbar(
         'Error',
@@ -47,13 +47,20 @@ class SetBudgetController extends GetxController {
       return;
     }
 
-    // Navigate using context
+    // ADD THIS - Check if this is the user's first budget
+    final isFirstBudget = await _checkIfFirstBudget();
+
+    // ADD THIS - Save the budget (replace with your actual save logic)
+    await _saveBudgetToDatabase(budgetAmount);
+
+    // UPDATED - Add isFirstBudget to your existing navigation
     context.push(
       '/budget-display',
       extra: {
         'category': category,
         'budgetAmount': budgetAmount,
         'spentAmount': 0.0,
+        'isFirstBudget': isFirstBudget, // ADD THIS LINE
       },
     );
   }
@@ -90,6 +97,41 @@ class SetBudgetController extends GetxController {
           ],
         ),
       ),
+    );
+  }
+
+  // ADD THIS METHOD - Check if this is the user's first budget
+  Future<bool> _checkIfFirstBudget() async {
+    // FOR TESTING - Always return true to show confetti
+    return true;
+
+    // REPLACE WITH YOUR ACTUAL LOGIC:
+    // Example using SharedPreferences:
+    // final prefs = await SharedPreferences.getInstance();
+    // final hasCreatedBudget = prefs.getBool('has_created_budget') ?? false;
+    // return !hasCreatedBudget;
+
+    // Example using your database/storage:
+    // return await YourDatabaseService.isFirstBudget();
+  }
+
+  // ADD THIS METHOD - Save budget to your storage/database
+  Future<void> _saveBudgetToDatabase(double budgetAmount) async {
+    // REPLACE WITH YOUR ACTUAL SAVE LOGIC:
+    // Example: Save to local database, API, etc.
+
+    // Simulate save operation
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Example: Mark that user has created their first budget
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setBool('has_created_budget', true);
+
+    // Example: Save to your database
+    // await YourDatabaseService.saveBudget(category, budgetAmount, selectedPeriod.value);
+
+    print(
+      'Budget saved: ${category.name} - \$${budgetAmount.toStringAsFixed(2)} - ${selectedPeriod.value}',
     );
   }
 }

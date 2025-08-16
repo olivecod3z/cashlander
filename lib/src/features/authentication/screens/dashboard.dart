@@ -201,15 +201,18 @@ class DashBoard extends StatelessWidget {
                           children: [
                             const TextSpan(
                               text: '\u20A6', // ₦
-                              style: TextStyle(
-                                fontFamily: 'Roboto',
-                              ), // Only symbol uses fallback
+                              style: TextStyle(fontFamily: 'Roboto'),
                             ),
-                            TextSpan(
+                            const TextSpan(
                               text: '5,000',
-                              style: const TextStyle(fontFamily: 'Campton'),
+                              style: TextStyle(fontFamily: 'Campton'),
                             ),
                           ],
+                        ),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white, // white for both
+                          fontWeight: FontWeight.w500, // medium weight for both
                         ),
                       ),
                     ),
@@ -218,7 +221,7 @@ class DashBoard extends StatelessWidget {
                       top: 78.h,
                       left: 12.w,
                       child: Text(
-                        '😁+\$1000 saved past month',
+                        '😁+1000 saved past month',
                         style: TextStyle(
                           fontSize: 9.sp,
                           color: progressColor,
@@ -448,14 +451,26 @@ class DashBoard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            '-\$5500',
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: '-\u20A6', // -₦
+                                  style: TextStyle(fontFamily: 'Roboto'),
+                                ),
+                                TextSpan(
+                                  text: '5500',
+                                  style: const TextStyle(fontFamily: 'Campton'),
+                                ),
+                              ],
+                            ),
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w500,
                               color: Colors.black,
                             ),
                           ),
+
                           SizedBox(height: 2.h),
                           Text(
                             '30 mins ago',
@@ -529,14 +544,26 @@ class DashBoard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            '-\$7000',
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                const TextSpan(
+                                  text: '-\u20A6', // -₦
+                                  style: TextStyle(fontFamily: 'Roboto'),
+                                ),
+                                TextSpan(
+                                  text: '10500',
+                                  style: const TextStyle(fontFamily: 'Campton'),
+                                ),
+                              ],
+                            ),
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w500,
                               color: Colors.black,
                             ),
                           ),
+
                           SizedBox(height: 2.h),
                           Text(
                             '16:45',
