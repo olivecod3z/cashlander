@@ -4,6 +4,7 @@ import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/constants/images.dart';
 import 'package:cash_lander2/src/constants/text.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/slider.dart';
+import 'package:cash_lander2/src/services/budget_storage_service.dart';
 import 'package:cash_lander2/widgets/slider_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,7 +21,10 @@ class DashBoard extends StatelessWidget {
     final ScrollSliderController scrollController = Get.put(
       ScrollSliderController(),
     );
-
+    final BudgetStorageService budgetStorage = Get.put(
+      BudgetStorageService(),
+      permanent: true,
+    );
     return Scaffold(
       backgroundColor: bgColor1,
       body: SafeArea(
@@ -138,166 +142,184 @@ class DashBoard extends StatelessWidget {
                 ),
                 SizedBox(height: 20.h),
                 //BALANCE CARD
-                Stack(
-                  children: [
-                    Container(
-                      width: 327.w,
-                      height: 98.h,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                          colors: [
-                            Color(0xFF130451), // Left end
-                            Color(0xFF286274), // Middle left
-                            //Color(0xFF006988), // Middle right
-                            Color(0xFF111E33), // Right end
-                          ],
-                          //stops: [0.0, 0.6, 0.8, 1.0],
+                // Updated Balance Card section for your Dashboard
+                // Replace your existing balance card Stack with this:
+
+                //BALANCE CARD
+                Obx(() {
+                  final budgetStorage = Get.find<BudgetStorageService>();
+                  final totalBudget = budgetStorage.totalBudgetAmount;
+                  final totalSpent = budgetStorage.totalSpentAmount;
+                  final totalRemaining = totalBudget - totalSpent;
+
+                  return Stack(
+                    children: [
+                      Container(
+                        width: 327.w,
+                        height: 98.h,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [
+                              Color(0xFF130451), // Left end
+                              Color(0xFF286274), // Middle left
+                              Color(0xFF111E33), // Right end
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(15.r),
                         ),
-                        borderRadius: BorderRadius.circular(15.r),
                       ),
-                    ),
-                    //shield icon
-                    Positioned(
-                      top: 10.h,
-                      left: 10.w,
-                      child: PhosphorIcon(
-                        PhosphorIconsFill.shieldCheck,
-                        color: Colors.white,
-                        size: 15.sp,
-                      ),
-                    ),
-                    //month budget text
-                    Positioned(
-                      top: 10.h,
-                      left: 30.w,
-                      child: Text(
-                        'Monthly Budget',
-                        style: TextStyle(
+                      //shield icon
+                      Positioned(
+                        top: 10.h,
+                        left: 10.w,
+                        child: PhosphorIcon(
+                          PhosphorIconsFill.shieldCheck,
                           color: Colors.white,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: -0.5.sp,
+                          size: 15.sp,
                         ),
                       ),
-                    ),
-                    //eye icon
-                    Positioned(
-                      top: 10.h,
-                      left: 115.w,
-                      child: PhosphorIcon(
-                        PhosphorIconsBold.eye,
-                        color: Colors.white,
-                        size: 15.sp,
-                      ),
-                    ),
-                    //Budget Amount
-                    Positioned(
-                      top: 36.h,
-                      left: 10.w,
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            const TextSpan(
-                              text: '\u20A6', // ₦
-                              style: TextStyle(fontFamily: 'Roboto'),
-                            ),
-                            const TextSpan(
-                              text: '5,000',
-                              style: TextStyle(fontFamily: 'Campton'),
-                            ),
-                          ],
-                        ),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.white, // white for both
-                          fontWeight: FontWeight.w500, // medium weight for both
-                        ),
-                      ),
-                    ),
-                    //Amount Saved in the past month
-                    Positioned(
-                      top: 78.h,
-                      left: 12.w,
-                      child: Text(
-                        '😁+1000 saved past month',
-                        style: TextStyle(
-                          fontSize: 9.sp,
-                          color: progressColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    //clock icon
-                    Positioned(
-                      top: 10.h,
-                      left: 195.w,
-                      child: PhosphorIcon(
-                        PhosphorIconsLight.clock,
-                        color: Colors.white,
-                        size: 13.sp,
-                      ),
-                    ),
-                    //history text
-                    Positioned(
-                      top: 11.h,
-                      left: 210.w,
-                      child: GestureDetector(
-                        onTap: () {
-                          //transaction history page
-                        },
+                      //month budget text
+                      Positioned(
+                        top: 10.h,
+                        left: 30.w,
                         child: Text(
-                          'Transaction History',
+                          'Monthly Budget',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10.sp,
+                            fontSize: 11.sp,
                             fontWeight: FontWeight.w400,
                             letterSpacing: -0.5.sp,
                           ),
                         ),
                       ),
-                    ),
-                    //Go to icon
-                    Positioned(
-                      top: 11.h,
-                      left: 300.w,
-                      child: PhosphorIcon(
-                        PhosphorIconsRegular.caretRight,
-                        color: const Color.fromARGB(169, 255, 255, 255),
-                        size: 13.sp,
+                      //eye icon
+                      Positioned(
+                        top: 10.h,
+                        left: 115.w,
+                        child: PhosphorIcon(
+                          PhosphorIconsBold.eye,
+                          color: Colors.white,
+                          size: 15.sp,
+                        ),
                       ),
-                    ),
-                    //Add mooney button
-                    Positioned(
-                      top: 70.h,
-                      left: 200.w,
-                      child: GestureDetector(
-                        onTap: () {
-                          //add money page
-                        },
-                        child: Container(
-                          width: 110.w,
-                          height: 18.h,
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(237, 255, 255, 255),
-                            borderRadius: BorderRadius.circular(100.r),
+                      //Budget Amount - NOW SHOWS TOTAL OF ALL BUDGETS
+                      Positioned(
+                        top: 36.h,
+                        left: 10.w,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              const TextSpan(
+                                text: '\u20A6', // ₦
+                                style: TextStyle(fontFamily: 'Roboto'),
+                              ),
+                              TextSpan(
+                                text: totalBudget.toStringAsFixed(0),
+                                style: TextStyle(fontFamily: 'Campton'),
+                              ),
+                            ],
                           ),
-                          child: Center(
-                            child: Text(
-                              '+ Add money',
-                              style: TextStyle(
-                                color: Color(0xFF130451),
-                                fontSize: 8.sp,
-                                fontWeight: FontWeight.w500,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      //Amount Remaining this month
+                      Positioned(
+                        top: 78.h,
+                        left: 12.w,
+                        child: Text(
+                          totalRemaining > 0
+                              ? '💰 ₦${totalRemaining.toStringAsFixed(0)} remaining'
+                              : totalRemaining < 0
+                              ? '⚠️ ₦${(-totalRemaining).toStringAsFixed(0)} over budget'
+                              : '✅ Budget fully used',
+                          style: TextStyle(
+                            fontSize: 9.sp,
+                            color:
+                                totalRemaining > 0
+                                    ? Colors.green[300]
+                                    : totalRemaining < 0
+                                    ? Colors.red[300]
+                                    : Colors.yellow[300],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      //clock icon
+                      Positioned(
+                        top: 10.h,
+                        left: 195.w,
+                        child: PhosphorIcon(
+                          PhosphorIconsLight.clock,
+                          color: Colors.white,
+                          size: 13.sp,
+                        ),
+                      ),
+                      //history text
+                      Positioned(
+                        top: 11.h,
+                        left: 210.w,
+                        child: GestureDetector(
+                          onTap: () {
+                            //transaction history page
+                          },
+                          child: Text(
+                            'Transaction History',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: -0.5.sp,
+                            ),
+                          ),
+                        ),
+                      ),
+                      //Go to icon
+                      Positioned(
+                        top: 11.h,
+                        left: 300.w,
+                        child: PhosphorIcon(
+                          PhosphorIconsRegular.caretRight,
+                          color: const Color.fromARGB(169, 255, 255, 255),
+                          size: 13.sp,
+                        ),
+                      ),
+                      //Add money button
+                      Positioned(
+                        top: 70.h,
+                        left: 200.w,
+                        child: GestureDetector(
+                          onTap: () {
+                            //add money page
+                          },
+                          child: Container(
+                            width: 110.w,
+                            height: 18.h,
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(237, 255, 255, 255),
+                              borderRadius: BorderRadius.circular(100.r),
+                            ),
+                            child: Center(
+                              child: Text(
+                                '+ Add money',
+                                style: TextStyle(
+                                  color: Color(0xFF130451),
+                                  fontSize: 8.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                }),
                 SizedBox(height: 20.h),
                 //add bank
                 Padding(
@@ -595,7 +617,7 @@ class DashBoard extends StatelessWidget {
               // Your action
               context.push('/addcategory');
             },
-            child: Container(
+            child: SizedBox(
               width: 56.w,
               height: 56.h,
               child: PhosphorIcon(

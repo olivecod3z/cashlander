@@ -1,9 +1,11 @@
 // Updated app_router.dart - Matches your existing BudgetSuccessScreen
+import 'package:cash_lander2/src/features/authentication/screens/add_expense_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/budget_display_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/budget_success_screen.dart'; // ADD THIS IMPORT
-import 'package:cash_lander2/src/features/authentication/screens/expense_category.dart';
+import 'package:cash_lander2/src/features/authentication/screens/budget_category.dart';
 import 'package:cash_lander2/src/features/authentication/screens/dashboard.dart';
 import 'package:cash_lander2/src/features/authentication/screens/income_category.dart';
+import 'package:cash_lander2/src/features/authentication/screens/insight_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/login_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/main_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/onboarding_screen.dart';
@@ -43,8 +45,20 @@ final GoRouter appRouter = GoRouter(
         return SetBudgetScreen(category: category);
       },
     ),
+    //add expense
+    GoRoute(
+      path: '/add-expense',
+      builder: (context, state) {
+        final data = state.extra as Map<String, dynamic>;
+        return AddExpenseScreen(
+          category: data['category'] as BudgetCategory,
+          budgetAmount: data['budgetAmount'] as double,
+          currentSpentAmount: data['spentAmount'] as double,
+        );
+      },
+    ),
 
-    // ADD THIS NEW ROUTE - Success screen with confetti
+    // Success screen with confetti
     GoRoute(
       path: '/budget-success',
       builder: (context, state) {
@@ -102,11 +116,11 @@ final GoRouter appRouter = GoRouter(
           name: 'home',
           builder: (context, state) => DashBoard(),
         ),
-        // GoRoute(
-        //   path: '/insights',
-        //   name: 'insights',
-        //   builder: (context, state) => InsightsScreen(),
-        // ),
+        GoRoute(
+          path: '/insights',
+          name: 'insights',
+          builder: (context, state) => InsightScreen(),
+        ),
         // GoRoute(
         //   path: '/settings',
         //   name: 'settings',

@@ -1,4 +1,4 @@
-// budget_storage_service.dart
+// budget_storage_service.dart - Fixed for proper GetX usage
 import 'package:get/get.dart';
 import 'package:cash_lander2/src/features/authentication/models/expense_model.dart';
 
@@ -53,12 +53,65 @@ class BudgetStorageService extends GetxController {
     }
   }
 
-  // Get all budgets
-  List<Map<String, dynamic>> get allBudgets => userBudgets;
+  // FIXED: Non-reactive method - Use .value to access the list directly
+  bool hasBudgetForCategory(String categoryName) {
+    return userBudgets.value.any(
+      (budget) => (budget['category'] as BudgetCategory).name == categoryName,
+    );
+  }
 
-  // Check if user has budgets
-  bool get hasBudgets => userBudgets.isNotEmpty;
+  // FIXED: Non-reactive method - Use .value to access the list directly
+  Map<String, dynamic>? getBudgetForCategory(String categoryName) {
+    try {
+      return userBudgets.value.firstWhere(
+        (budget) => (budget['category'] as BudgetCategory).name == categoryName,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
 
-  // Get budget count
-  int get budgetCount => userBudgets.length;
+  // REACTIVE: These should only be called inside Obx() or GetBuilder()
+  double get totalBudgetAmount {
+    double total = 0.0;
+    for (var budget in userBudgets) {
+      total += budget['budgetAmount'] as double;
+    }
+    return total;
+  }
+
+  // REACTIVE: These should only be called inside Obx() or GetBuilder()
+  double get totalSpentAmount {
+    double total = 0.0;
+    for (var budget in userBudgets) {
+      total += budget['spentAmount'] as double;
+    }
+    return total;
+  }
+
+  // NON-REACTIVE versions for use outside Obx()
+  double getTotalBudgetAmount() {
+    double total = 0.0;
+    for (var budget in userBudgets.value) {
+      total += budget['budgetAmount'] as double;
+    }
+    return total;
+  }
+
+  double getTotalSpentAmount() {
+    double total = 0.0;
+    for (var budget in userBudgets.value) {
+      total += budget['spentAmount'] as double;
+    }
+    return total;
+  }
+
+  // Get all budgets (non-reactive)
+  List<Map<String, dynamic>> get allBudgets => userBudgets.value;
+
+  // Check if user has budgets (non-reactive)
+  bool get hasBudgets => userBudgets.value.isNotEmpty;
+
+  // Get budget count (non-reactive)
+  int get budgetCount => userBudgets.value.length;
 }

@@ -1,4 +1,5 @@
 // set_budget_screen.dart - GoRouter Compatible
+import 'package:cash_lander2/src/common_widgets/budget_cate_logo.dart';
 import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/set_budget_controller.dart';
 import 'package:cash_lander2/src/features/authentication/models/expense_model.dart';
@@ -66,34 +67,9 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
                       ),
                     ),
                     const Spacer(),
-                    Container(
-                      width: 45.w,
-                      height: 45.h,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            controller.category.color.withOpacity(0.9),
-                            controller.category.color.withOpacity(0.6),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: controller.category.color.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Icon(
-                          controller.category.icon,
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                      ),
+                    BudgetCategoryLogo(
+                      icon: controller.category.icon,
+                      color: controller.category.color,
                     ),
                   ],
                 ),
@@ -222,6 +198,10 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
                               decoration: BoxDecoration(
                                 color: Colors.grey[200],
                                 borderRadius: BorderRadius.circular(12.r),
+                                border: Border.all(
+                                  color: btnColor1, // 👈 your blue border
+                                  width: 1.5, // 👈 thickness
+                                ),
                               ),
                               padding: EdgeInsets.symmetric(horizontal: 6.w),
                               alignment: Alignment.center,
@@ -235,10 +215,17 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
                                 ),
                                 decoration: const InputDecoration(
                                   hintText: '0',
+                                  prefixText: '\u20A6',
+                                  prefixStyle: TextStyle(
+                                    fontFamily: 'Roboto',
+
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                  ),
                                   isDense: true,
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 10,
-                                    vertical: 3,
+                                    vertical: 1,
                                   ),
                                   border: InputBorder.none,
                                   enabledBorder: InputBorder.none,

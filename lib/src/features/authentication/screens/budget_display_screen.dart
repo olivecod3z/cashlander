@@ -1,15 +1,18 @@
+import 'package:cash_lander2/src/common_widgets/budget_cate_logo.dart';
 import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/budget_display_controller.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/toggle_controller.dart';
 import 'package:cash_lander2/src/features/authentication/models/expense_model.dart';
 import 'package:cash_lander2/src/services/budget_storage_service.dart';
 import 'package:cash_lander2/widgets/toggle.dart';
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'dart:math';
 
 class BudgetDisplayScreen extends StatefulWidget {
   final BudgetCategory category;
@@ -29,106 +32,141 @@ class BudgetDisplayScreen extends StatefulWidget {
 
 class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
   late BudgetDisplayController controller;
-
-  // Initialize budget list with empty list
-  List<Map<String, dynamic>> budgetList = [];
+  late ConfettiController _confettiController;
+  late ToggleController toggleController; // Moved from build()
+  bool showContinuingConfetti = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize controller and set data
+
+    // Initialize controllers
     controller = Get.put(BudgetDisplayController());
+    toggleController = Get.put(ToggleController()); // Moved here
+
+    // Set controller data
     controller.category = widget.category;
     controller.budgetAmount = widget.budgetAmount.obs;
     controller.spentAmount.value = widget.spentAmount;
 
-    // Get persistent budget storage
-    final budgetStorage = Get.put(BudgetStorageService());
-
-    // Add current budget to user's collection
-    budgetStorage.addUserBudget(
-      widget.category,
-      widget.budgetAmount,
-      spentAmount: widget.spentAmount,
+    // Initialize confetti
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
     );
 
-    // Use accumulated budgets for grid display
-    budgetList = budgetStorage.userBudgets;
+    // FIXED: Defer the budget storage update to after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final budgetStorage = Get.find<BudgetStorageService>();
+
+      // Add current budget to user's collection AFTER build is complete
+      budgetStorage.addUserBudget(
+        widget.category,
+        widget.budgetAmount,
+        spentAmount: widget.spentAmount,
+      );
+
+      // Handle confetti
+      showContinuingConfetti = true;
+      if (mounted) {
+        setState(() {}); // Trigger rebuild to show confetti
+        _confettiController.play();
+      }
+
+      // Stop confetti after 2 seconds
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            showContinuingConfetti = false;
+          });
+        }
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final toggleController = Get.put(ToggleController());
-
     return Scaffold(
       backgroundColor: bgColor2,
-
-      floatingActionButton: Positioned(
-        bottom: 100.h, // Above the navbar
-        right: 20.w,
-        child: Material(
-          elevation: 6,
-          shape: CircleBorder(),
-          color: btnColor1,
-          child: InkWell(
-            customBorder: CircleBorder(),
-            onTap: () {
-              // Your action
-              context.push('/addcategory');
-            },
-            child: Container(
-              width: 56.w,
-              height: 56.h,
-              child: PhosphorIcon(
-                PhosphorIconsBold.plus,
-                color: Colors.white,
-                size: 24,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    SizedBox(height: 30.h),
+                    Center(
+                      child: ExpenseIncomeToggle(
+                        onExpenseSelected: () {
+                          toggleController.toggletoExpense();
+                          context.go('/budget_display');
+                        },
+                        onIncomeSelected: () {
+                          toggleController.toggletoIncome();
+                          context.go('/incomelist');
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 30.h),
+                    Text(
+                      'Categories',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        color: Color(0xFF666666),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 10.h),
+                    _buildBudgetGrid(),
+                    SizedBox(height: 32.h),
+                  ],
+                ),
               ),
             ),
           ),
+
+          // Continuing confetti overlay
+          if (showContinuingConfetti)
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                shouldLoop: false,
+                colors: const [
+                  Color(0xFF3B82F6),
+                  Color(0xFF8B5CF6),
+                  Color(0xFFEC4899),
+                  Color(0xFFF59E0B),
+                  Color(0xFF10B981),
+                  Color(0xFFEF4444),
+                  Color(0xFF6366F1),
+                  Color(0xFF14B8A6),
+                ],
+                createParticlePath: _drawStar,
+                emissionFrequency: 0.03,
+                numberOfParticles: 30,
+                gravity: 0.15,
+              ),
+            ),
+        ],
+      ),
+      // FIXED: Proper FloatingActionButton instead of Positioned
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.push('/addcategory');
+        },
+        backgroundColor: btnColor1,
+        child: PhosphorIcon(
+          PhosphorIconsBold.plus,
+          color: Colors.white,
+          size: 24,
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 24.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                SizedBox(height: 30.h),
-                Center(
-                  child: ExpenseIncomeToggle(
-                    onExpenseSelected: () {
-                      toggleController.toggletoExpense();
-                      context.go('/budget_display');
-                    },
-                    onIncomeSelected: () {
-                      toggleController.toggletoIncome();
-                      context.go('/incomelist');
-                    },
-                  ),
-                ),
-                SizedBox(height: 30.h),
-                Text(
-                  'Categories',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: Color(0xFF666666),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                _buildBudgetGrid(),
-                SizedBox(height: 32.h),
-                // _buildSuccessMessage(),
-                // SizedBox(height: 80.h), // Extra space for FAB
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -164,30 +202,34 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
     );
   }
 
-  /// Budget Grid (2 cards per row)
+  /// FIXED: Budget Grid using reactive Obx
   Widget _buildBudgetGrid() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12.w,
-        mainAxisSpacing: 12.h,
-        childAspectRatio: 0.85, // Adjust this to control card height
-      ),
-      itemCount: budgetList.length,
-      itemBuilder: (context, index) {
-        final budgetData = budgetList[index];
-        return _buildBudgetCard(
-          budgetData['category'] as BudgetCategory,
-          budgetData['budgetAmount'] as double,
-          budgetData['spentAmount'] as double,
-        );
-      },
-    );
+    return Obx(() {
+      final budgetStorage = Get.find<BudgetStorageService>();
+      final budgets = budgetStorage.userBudgets; // RxList - stays reactive
+
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12.w,
+          mainAxisSpacing: 12.h,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: budgets.length,
+        itemBuilder: (context, index) {
+          final budgetData = budgets[index];
+          return _buildBudgetCard(
+            budgetData['category'] as BudgetCategory,
+            budgetData['budgetAmount'] as double,
+            budgetData['spentAmount'] as double,
+          );
+        },
+      );
+    });
   }
 
-  /// Individual Budget Card (smaller for grid)
   Widget _buildBudgetCard(
     BudgetCategory category,
     double budgetAmount,
@@ -196,166 +238,219 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
     final progressPercentage =
         budgetAmount > 0 ? (spentAmount / budgetAmount).clamp(0.0, 1.0) : 0.0;
 
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: const Color.fromARGB(68, 200, 199, 199),
-          width: 1,
+    return GestureDetector(
+      onTap: () {
+        // Navigate to add expense screen with category data
+        context.push(
+          '/add-expense',
+          extra: {
+            'category': category,
+            'budgetAmount': budgetAmount,
+            'spentAmount': spentAmount,
+          },
+        );
+      },
+      child: Container(
+        width: 163.w,
+        height: 250.h,
+        padding: EdgeInsets.all(8.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: const Color.fromARGB(68, 200, 199, 199),
+            width: 1,
+          ),
         ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Category Icon (smaller)
-          Container(
-            width: 32.w,
-            height: 32.h,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  category.color.withOpacity(0.9),
-                  category.color.withOpacity(0.6),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: category.color.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Icon(category.icon, size: 18, color: Colors.white),
-            ),
-          ),
-
-          SizedBox(height: 8.h),
-
-          // Category Name
-          Text(
-            category.name,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-
-          SizedBox(height: 4.h),
-
-          // Period
-          Text(
-            'Monthly',
-            style: TextStyle(
-              fontSize: 9.sp,
-              fontWeight: FontWeight.w400,
-              color: textColor4,
-            ),
-          ),
-
-          SizedBox(height: 12.h),
-
-          // Circular Progress (smaller)
-          CircularPercentIndicator(
-            radius: 35.0.w,
-            lineWidth: 5.0.w,
-            percent: progressPercentage,
-            center: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          children: [
+            // Main content using Column for consistency
+            Column(
               children: [
-                Text.rich(
-                  TextSpan(
+                // Top spacer to accommodate the menu button
+                SizedBox(height: 20.h),
+                // Main content - this will be consistent across all cards
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      TextSpan(
-                        text: '\u20A6', // Naira symbol
-                        style: TextStyle(
-                          fontFamily: 'Roboto', // Fallback font that supports ₦
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                      // Category Icon
+                      BudgetCategoryLogo(
+                        icon: category.icon,
+                        color: category.color,
+                        size: 35.w,
+                      ),
+
+                      SizedBox(height: 6.h),
+                      // Category Name - Fixed height container
+                      Container(
+                        height: 18.h,
+                        alignment: Alignment.center,
+                        child: Text(
+                          category.name,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                      TextSpan(
-                        text: budgetAmount.toStringAsFixed(0),
+
+                      SizedBox(height: 2.h),
+                      // Period
+                      Text(
+                        'Monthly',
                         style: TextStyle(
-                          fontFamily: 'Campton',
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF45413C),
                         ),
+                      ),
+
+                      SizedBox(height: 8.h),
+                      // Circular Progress
+                      CircularPercentIndicator(
+                        radius: 35.0.w,
+                        lineWidth: 3.5.w,
+                        percent: progressPercentage,
+                        center: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Budget amount
+                            Container(
+                              height: 14.h,
+                              alignment: Alignment.center,
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: '\u20A6',
+                                      style: TextStyle(
+                                        fontFamily: 'Roboto',
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: budgetAmount.toStringAsFixed(0),
+                                      style: TextStyle(
+                                        fontFamily: 'Campton',
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Percentage
+                            Container(
+                              height: 10.h,
+                              alignment: Alignment.center,
+                              child: Text(
+                                '${(progressPercentage * 100).toStringAsFixed(0)}%',
+                                style: TextStyle(
+                                  fontSize: 7.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: category.color,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        progressColor: category.color,
+                        backgroundColor: Colors.grey[200]!,
+                        circularStrokeCap: CircularStrokeCap.round,
+                        animation: true,
+                        animationDuration: 1200,
+                        curve: Curves.easeInOutCubic,
                       ),
                     ],
                   ),
                 ),
 
-                if (spentAmount > 0)
-                  Text(
-                    '${(progressPercentage * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      fontSize: 8.sp,
-                      fontWeight: FontWeight.w500,
-                      color: category.color,
-                    ),
-                  ),
+                // Bottom spacer
+                SizedBox(height: 4.h),
               ],
             ),
-            progressColor: category.color,
-            backgroundColor: Colors.grey[200]!,
-            circularStrokeCap: CircularStrokeCap.round,
-            animation: true,
-            animationDuration: 1200,
-            curve: Curves.easeInOutCubic,
-          ),
 
-          //SizedBox(height: 8.h),
-
-          // // Budget Summary (compact)
-          // if (spentAmount > 0) ...[
-          //   Text(
-          //     'Spent: \$${spentAmount.toStringAsFixed(0)}',
-          //     style: TextStyle(
-          //       fontSize: 9.sp,
-          //       fontWeight: FontWeight.w500,
-          //       color: textColor4,
-          //     ),
-          //   ),
-          //   Text(
-          //     'Left: \$${(budgetAmount - spentAmount).toStringAsFixed(0)}',
-          //     style: TextStyle(
-          //       fontSize: 9.sp,
-          //       fontWeight: FontWeight.w500,
-          //       color:
-          //           (budgetAmount - spentAmount) >= 0
-          //               ? Colors.green[600]
-          //               : Colors.red[600],
-          //     ),
-          //   ),
-          // ] else ...[
-          //   Text(
-          //     'Budget Set',
-          //     style: TextStyle(
-          //       fontSize: 9.sp,
-          //       fontWeight: FontWeight.w500,
-          //       color: category.color,
-          //     ),
-          //   ),
-        ],
-        // ],
+            // Triple-dot menu positioned at top-right
+            Positioned(
+              top: -4.h,
+              right: -4.w,
+              child: PopupMenuButton<String>(
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.more_vert, size: 18, color: Colors.black),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'details':
+                      // Handle view details
+                      break;
+                    case 'edit':
+                      // Handle edit budget
+                      break;
+                    case 'delete':
+                      // Handle delete budget
+                      break;
+                  }
+                },
+                itemBuilder:
+                    (context) => const [
+                      PopupMenuItem(
+                        value: 'details',
+                        child: Text('View details'),
+                      ),
+                      PopupMenuItem(value: 'edit', child: Text('Edit budget')),
+                      PopupMenuItem(value: 'delete', child: Text('Delete')),
+                    ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  // Custom star-shaped particles
+  Path _drawStar(Size size) {
+    double degToRad(double deg) => deg * (pi / 180.0);
+
+    const numberOfPoints = 5;
+    final halfWidth = size.width / 2;
+    final externalRadius = halfWidth;
+    final internalRadius = halfWidth / 2.5;
+    final degreesPerStep = degToRad(360 / numberOfPoints);
+    final halfDegreesPerStep = degreesPerStep / 2;
+    final path = Path();
+    final fullAngle = degToRad(360);
+    path.moveTo(size.width, halfWidth);
+
+    for (double step = 0; step < fullAngle; step += degreesPerStep) {
+      path.lineTo(
+        halfWidth + externalRadius * cos(step),
+        halfWidth + externalRadius * sin(step),
+      );
+      path.lineTo(
+        halfWidth + internalRadius * cos(step + halfDegreesPerStep),
+        halfWidth + internalRadius * sin(step + halfDegreesPerStep),
+      );
+    }
+    path.close();
+    return path;
+  }
+
   @override
   void dispose() {
+    _confettiController.dispose();
     Get.delete<BudgetDisplayController>();
     super.dispose();
   }

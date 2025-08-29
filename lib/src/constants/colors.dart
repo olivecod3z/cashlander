@@ -13,6 +13,7 @@ const btnColor4 = Color(0xFFE6F6FF);
 //text colors for headings, subheadings, and body text
 const textColor1 = Color.fromARGB(255, 27, 34, 48);
 const subColor = Color(0xFF4D4D4D);
+const mainTextColor = Color(0xFF333333);
 
 //password info text, ...
 const textColor2 = Color.fromARGB(255, 51, 51, 52);
@@ -26,6 +27,7 @@ const theTitle = Color.fromRGBO(51, 51, 51, 1);
 const textFieldColor = Color(0xFFE0E0E0);
 const bgColor1 = Color(0xFFF2F2F2);
 const bgColor2 = Color(0xFFF8F8F8);
+const bgColor3 = Color(0xFFFAFAFA);
 const progressColor = Color(0xFF00FF33);
 const textColor4 = Color(0xFF45413C);
 //Caategory colorsconst
@@ -49,9 +51,6 @@ const giftColor = Color(0xFFEC4899);
 const expColor = Color(0xFF1E40AF);
 const misColor = Color(0xFF64748B);
 
-//gradiebt color
-const LinearGradient gradcolor = LinearGradient(
-  begin: Alignment.topCenter,
-  end: Alignment.bottomCenter,
-  colors: [Color(0xFF2450F9), Color(0xFF000000)],
-);
+const expContColor = Color(0xFFCAF0E3);
+const calendColor = Color(0xFFF9FAFB);
+const borderColor = Color(0xFFE2E4E9);

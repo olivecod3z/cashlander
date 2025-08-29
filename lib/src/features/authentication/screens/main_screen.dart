@@ -4,7 +4,7 @@ import 'package:cash_lander2/src/common_widgets/bottom_navbar.dart'; // Your exi
 class MainScreen extends StatelessWidget {
   final Widget child;
 
-  const MainScreen({required this.child});
+  const MainScreen({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

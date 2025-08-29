@@ -10,10 +10,10 @@ class ExpenseIncomeToggle extends StatelessWidget {
   final VoidCallback onIncomeSelected;
 
   ExpenseIncomeToggle({
-    Key? key,
+    super.key,
     required this.onExpenseSelected,
     required this.onIncomeSelected,
-  }) : super(key: key);
+  });
   @override
   Widget build(BuildContext context) {
     return Container(

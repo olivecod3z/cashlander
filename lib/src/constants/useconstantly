@@ -1,0 +1,28 @@
+ Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '\u20A6',
+                  style: TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  NumberFormat.compactCurrency(
+                    locale: 'en_NG',
+                    symbol: '',
+                    decimalDigits: 0,
+                  ).format(amount),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Campton',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),

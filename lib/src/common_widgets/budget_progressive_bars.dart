@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+
 import 'package:intl/intl.dart';
 
 class BudgetBars extends StatelessWidget {
@@ -136,7 +137,7 @@ class BudgetBars extends StatelessWidget {
         Positioned(
           left: 14.w,
           top: 60.h,
-          child: Container(
+          child: SizedBox(
             width: 110.w, // Set the bar width
             child: LinearPercentIndicator(
               lineHeight: 4.h,

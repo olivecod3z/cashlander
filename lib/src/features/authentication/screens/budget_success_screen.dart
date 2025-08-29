@@ -23,7 +23,7 @@ class _BudgetSuccessScreenState extends State<BudgetSuccessScreen> {
 
     // Initialize confetti controller
     _confettiController = ConfettiController(
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 4),
     );
 
     // Start confetti after a short delay

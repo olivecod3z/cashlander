@@ -26,6 +26,8 @@ dependencies:
   percent_indicator: ^4.2.5
   intl: ^0.20.2
   confetti: ^0.8.0
+  fl_chart: ^1.0.0
+  syncfusion_flutter_charts: ^30.2.7
 
 dev_dependencies:
   flutter_test:

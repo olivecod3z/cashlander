@@ -3,11 +3,14 @@ import 'package:cash_lander2/src/features/authentication/controllers/bottombar_c
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class BottomNavbar extends StatelessWidget {
   //const BottomNavbar({super.key});
   final BottombarController controller = Get.put(BottombarController());
+
+  BottomNavbar({super.key});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -30,19 +33,22 @@ class BottomNavbar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildNavItem(
-                icon: PhosphorIconsFill.house,
+                context: context,
+                icon: PhosphorIconsRegular.house,
                 label: 'Home',
                 index: 0,
                 isSelected: controller.selectedIndex.value == 0,
               ),
               _buildNavItem(
-                icon: PhosphorIconsFill.chartDonut,
+                context: context,
+                icon: PhosphorIconsRegular.chartBar,
                 label: 'Insights',
                 index: 1,
                 isSelected: controller.selectedIndex.value == 1,
               ),
               _buildNavItem(
-                icon: PhosphorIconsFill.gear,
+                context: context,
+                icon: PhosphorIconsRegular.gear,
                 label: 'Settings',
                 index: 2,
                 isSelected: controller.selectedIndex.value == 2,
@@ -55,13 +61,27 @@ class BottomNavbar extends StatelessWidget {
   }
 
   Widget _buildNavItem({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required int index,
     required bool isSelected,
   }) {
     return GestureDetector(
-      onTap: () => controller.changeIndex(index),
+      onTap: () {
+        controller.changeIndex(index);
+        switch (index) {
+          case 0:
+            context.go('/');
+            break;
+          case 1:
+            context.go('/insights');
+            break;
+          case 2:
+            // context.go('/settings');
+            break;
+        }
+      },
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
@@ -75,13 +95,17 @@ class BottomNavbar extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            PhosphorIcon(icon, color: Colors.black, size: 20.sp),
+            PhosphorIcon(
+              icon,
+              color: isSelected ? Colors.blue : Colors.black,
+              size: 20.sp,
+            ),
             if (isSelected) ...[
               SizedBox(width: 4.w),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.blue,
                   fontWeight: FontWeight.w500,
                   fontSize: 11.sp,
                 ),

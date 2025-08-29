@@ -93,7 +93,7 @@ class SetBudgetController extends GetxController {
                   Get.back();
                 },
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
