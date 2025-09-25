@@ -1,6 +1,9 @@
 import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/constants/images.dart';
 import 'package:cash_lander2/src/constants/text.dart';
+import 'package:cash_lander2/src/services/firebase_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +30,8 @@ class _ProfileCreatedState extends State<ProfileCreated>
   late Animation<Offset> _text1SlideAnimation;
   late Animation<Offset> _text2SlideAnimation;
   late Animation<Offset> _buttonSlideAnimation;
+
+  bool _isNavigating = false; // Add loading state
 
   @override
   void initState() {
@@ -221,22 +226,51 @@ class _ProfileCreatedState extends State<ProfileCreated>
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () {
+                              onTap: () async {
                                 // Add button press animation
                                 _animateButtonPress();
-                                // Your navigation logic here
-                                context.push('/dashboard');
+
+                                // Mark profile as completed in Firebase
+                                try {
+                                  final user =
+                                      FirebaseAuth.instance.currentUser;
+                                  if (user != null) {
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(user.uid)
+                                        .update({
+                                          'profileCompleted': true,
+                                          'updatedAt':
+                                              FieldValue.serverTimestamp(),
+                                        });
+                                  }
+                                } catch (e) {
+                                  print('Error marking profile complete: $e');
+                                }
+
+                                // Navigate to dashboard
+                                context.go('/');
                               },
                               borderRadius: BorderRadius.circular(24.r),
                               child: Center(
-                                child: Text(
-                                  'Continue',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 15.sp,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                                child:
+                                    _isNavigating
+                                        ? SizedBox(
+                                          width: 20.w,
+                                          height: 20.h,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                        : Text(
+                                          'Continue',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15.sp,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
                               ),
                             ),
                           ),

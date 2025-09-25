@@ -2,7 +2,6 @@ import 'package:cash_lander2/src/features/authentication/controllers/toggle_cont
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 
 class ExpenseIncomeToggle extends StatelessWidget {
   final ToggleController controller = Get.find<ToggleController>();

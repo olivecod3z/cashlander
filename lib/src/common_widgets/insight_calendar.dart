@@ -157,7 +157,7 @@ class DayDetailsModal extends StatelessWidget {
                   child: Container(
                     height: 55.h,
                     decoration: BoxDecoration(
-                      color: btnColor1!.withOpacity(0.1),
+                      color: btnColor1.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20.r),
                       border: Border.all(color: btnColor1, width: 1.w),
                     ),

@@ -1,4 +1,3 @@
-import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/bottombar_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

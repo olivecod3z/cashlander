@@ -183,7 +183,7 @@ class InsightScreen extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 17.h),
-                Container(
+                SizedBox(
                   width: 344.w,
                   height: 76.h,
                   child: Column(

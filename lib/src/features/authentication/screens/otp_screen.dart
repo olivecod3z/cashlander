@@ -1,318 +1,355 @@
+// email_verification_screen.dart
 import 'package:cash_lander2/src/constants/colors.dart';
-import 'package:cash_lander2/src/constants/text.dart';
-import 'package:cash_lander2/src/features/authentication/controllers/countdown_controller.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/signup_controller.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'dart:async';
 
-class OtpScreen extends StatelessWidget {
-  const OtpScreen({super.key});
+class EmailVerificationScreen extends StatefulWidget {
+  const EmailVerificationScreen({super.key});
+
+  @override
+  State<EmailVerificationScreen> createState() =>
+      _EmailVerificationScreenState();
+}
+
+class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
+  bool isLoading = false;
+  bool canResend = false;
+  int countdown = 60;
+  Timer? timer;
+
+  @override
+  void initState() {
+    super.initState();
+    startCountdown();
+    startVerificationCheck();
+  }
+
+  void startCountdown() {
+    countdown = 60;
+    canResend = false;
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (countdown > 0) {
+        setState(() {
+          countdown--;
+        });
+      } else {
+        setState(() {
+          canResend = true;
+        });
+        timer.cancel();
+      }
+    });
+  }
+
+  void startVerificationCheck() {
+    // Check email verification status every 3 seconds
+    Timer.periodic(Duration(seconds: 3), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      final controller = Get.find<SignupController>();
+      final isVerified = await controller.checkEmailVerification();
+
+      if (isVerified) {
+        timer.cancel();
+        // Navigate to username screen
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Email verified successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.go('/username');
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     if (!Get.isRegistered<SignupController>()) {
-      Get.put(SignupController()); // rebind if not found
+      Get.put(SignupController());
     }
 
-    final countdownController = Get.put(CountdownController());
-
-    // Listen for verification success and navigate automatically
-    ever(countdownController.verificationSuccess, (bool success) {
-      if (success) {
-        print(
-          '🎯 Success listener triggered! Navigating to username screen...',
-        );
-        Future.delayed(Duration(milliseconds: 100), () {
-          context.go('/username');
-          print('✅ Navigation to /username completed!');
-        });
-      }
-    });
+    final controller = Get.find<SignupController>();
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.only(top: 55.h),
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: EdgeInsets.only(left: 20.w, right: 20.w),
-                child: Row(
-                  children: [
-                    // Back button with constrained size
-                    SizedBox(
+              // Header with back button
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
                       height: 40.h,
                       width: 40.w,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: btnColor4,
-                          borderRadius: BorderRadius.circular(20.r),
-                        ),
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            context.pop();
-                          },
-                          icon: Icon(
-                            Icons.arrow_back_ios_new,
-                            color: Colors.black,
-                            size: 18.sp,
-                          ),
-                        ),
+                      decoration: BoxDecoration(
+                        color: btnColor4,
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Icon(
+                        Icons.arrow_back_ios_new,
+                        color: Colors.black,
+                        size: 18.sp,
                       ),
                     ),
-                    // Flexible spacer
-                    const Expanded(child: SizedBox()),
-
-                    // Next button with loading state
-                    Obx(
-                      () => ElevatedButton(
-                        onPressed:
-                            countdownController.isLoading.value
-                                ? null
-                                : () async {
-                                  print('🔘 Next button clicked!');
-                                  final code =
-                                      countdownController.otpCode.value;
-                                  print(
-                                    '📝 Current OTP code: "$code" (length: ${code.length})',
-                                  );
-
-                                  if (code.length == 6) {
-                                    print('🚀 Starting verification...');
-                                    await countdownController
-                                        .verifyOTPWithoutNavigation(code);
-                                    // Navigation will be handled by the listener above
-                                  } else {
-                                    print('❌ Invalid OTP length');
-                                    Get.snackbar(
-                                      'Invalid OTP',
-                                      'Please enter the complete 6-digit code.',
-                                      snackPosition: SnackPosition.TOP,
-                                      backgroundColor: Colors.orange,
-                                      colorText: Colors.white,
-                                      duration: const Duration(seconds: 2),
-                                    );
-                                  }
-                                },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              countdownController.isLoading.value
-                                  ? btnColor1.withOpacity(0.7)
-                                  : btnColor1,
-                          foregroundColor: Colors.white,
-                          minimumSize: Size(80.w, 40.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                        ),
-                        child:
-                            countdownController.isLoading.value
-                                ? SizedBox(
-                                  height: 16.h,
-                                  width: 16.w,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                                : Text(
-                                  'Next',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                      ),
+                  ),
+                  Spacer(),
+                  Text(
+                    'Verify Email',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Container(
-                width: double.infinity,
-                height: 1.h,
-                color: const Color.fromARGB(255, 222, 221, 221),
-              ),
-              SizedBox(height: 20.h),
-
-              // OTP Title
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Text(
-                  'Enter Verification Code',
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w600,
-                    color: textColor1,
-                    letterSpacing: -0.5.sp,
                   ),
-                ),
+                  Spacer(),
+                  SizedBox(width: 40.w), // Balance the back button
+                ],
               ),
-              SizedBox(height: 30.h),
 
-              // POLISHED OTP INPUT
-              Center(
-                child: OtpTextField(
-                  numberOfFields: 6,
-                  borderColor: Colors.grey.shade300,
-                  focusedBorderColor: btnColor1, // Blue when focused
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderWidth: 1.5.w,
-                  fieldWidth: 45.w,
-                  fieldHeight: 50.h,
-                  showFieldAsBox: true,
-                  margin: EdgeInsets.symmetric(horizontal: 6.w),
-                  cursorColor: btnColor1,
-                  enabledBorderColor: Colors.grey.shade300,
-                  disabledBorderColor: Colors.grey.shade300,
-                  //filledBorderColor: btnColor1, // Blue border when filled
-                  keyboardType: TextInputType.number,
-                  textStyle: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w500,
-                    color: btnColor1, // Blue text color
-                  ),
-                  onCodeChanged: (code) {
-                    print(
-                      '📝 OTP code changed: "$code" (length: ${code.length})',
-                    );
-                    countdownController.otpCode.value = code;
-                  },
-                  onSubmit: (code) {
-                    print('✅ OTP submitted: "$code"');
-                    print('🔍 Calling onOTPSubmit...');
-                    countdownController.onOTPSubmit(code);
-                  },
-                ),
-              ),
               SizedBox(height: 40.h),
 
-              // POLISHED TEXT SECTION
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  children: [
-                    // Main text
-                    Text(
-                      sentText,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                        color: subColor,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8.h),
+              // Email icon
+              Center(
+                child: Container(
+                  width: 80.w,
+                  height: 80.h,
+                  decoration: BoxDecoration(
+                    color: btnColor1.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(40.r),
+                  ),
+                  child: PhosphorIcon(
+                    PhosphorIconsBold.envelope,
+                    color: btnColor1,
+                    size: 40.sp,
+                  ),
+                ),
+              ),
 
-                    // Timer
-                    Obx(
-                      () => Text(
-                        countdownController.formattedTime.value,
+              SizedBox(height: 30.h),
+
+              // Title
+              Text(
+                'Check your email',
+                style: TextStyle(
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.w700,
+                  color: textColor1,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: 16.h),
+
+              // Description
+              Obx(
+                () => RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    text: 'We sent a verification link to\n',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      color: subColor,
+                      height: 1.5,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: controller.userEmail.value,
                         style: TextStyle(
-                          fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
                           color: btnColor1,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // Resend section
-                    Obx(() {
-                      if (countdownController.canResend.value) {
-                        return RichText(
-                          text: TextSpan(
-                            text: 'Didn\'t receive the code? ',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w400,
-                              color: subColor,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: 'Resend',
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  color: btnColor1,
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: btnColor1,
-                                ),
-                                recognizer:
-                                    TapGestureRecognizer()
-                                      ..onTap = () {
-                                        countdownController.restartTimer();
-                                      },
-                              ),
-                            ],
-                          ),
-                        );
-                      } else {
-                        return Text(
-                          'Didn\'t receive the code? Resend',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w400,
-                            color: Colors.grey.shade400,
-                          ),
-                          textAlign: TextAlign.center,
-                        );
-                      }
-                    }),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
               SizedBox(height: 40.h),
 
-              // // Development note (remove in production)
-              // Padding(
-              //   padding: EdgeInsets.symmetric(horizontal: 20.w),
-              //   child: Container(
-              //     padding: EdgeInsets.all(12.w),
-              //     decoration: BoxDecoration(
-              //       color: Colors.blue.withOpacity(0.1),
-              //       borderRadius: BorderRadius.circular(8.r),
-              //       border: Border.all(color: Colors.blue.withOpacity(0.3)),
-              //     ),
-              //     child: Column(
-              //       crossAxisAlignment: CrossAxisAlignment.start,
-              //       children: [
-              //         Text(
-              //           'Development Mode:',
-              //           style: TextStyle(
-              //             fontSize: 12.sp,
-              //             fontWeight: FontWeight.bold,
-              //             color: Colors.blue.shade700,
-              //           ),
-              //         ),
-              //         SizedBox(height: 4.h),
-              //         Text(
-              //           'Check console logs for OTP code. Navigation will happen automatically when verification succeeds.',
-              //           style: TextStyle(
-              //             fontSize: 11.sp,
-              //             color: Colors.blue.shade600,
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
+              // Instructions
+              Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Next steps:',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: textColor1,
+                      ),
+                    ),
+                    SizedBox(height: 12.h),
+                    _buildInstruction('1', 'Check your email inbox'),
+                    SizedBox(height: 8.h),
+                    _buildInstruction('2', 'Click the verification link'),
+                    SizedBox(height: 8.h),
+                    _buildInstruction('3', 'Return to this app'),
+                  ],
+                ),
+              ),
+
+              Spacer(),
+
+              // Resend section
+              Center(
+                child:
+                    canResend
+                        ? TextButton(
+                          onPressed:
+                              isLoading
+                                  ? null
+                                  : () async {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+
+                                    await controller.resendVerificationEmail();
+                                    startCountdown();
+
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  },
+                          child:
+                              isLoading
+                                  ? SizedBox(
+                                    width: 20.w,
+                                    height: 20.h,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        btnColor1,
+                                      ),
+                                    ),
+                                  )
+                                  : Text(
+                                    'Resend verification email',
+                                    style: TextStyle(
+                                      color: btnColor1,
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                        )
+                        : Text(
+                          'Resend available in ${countdown}s',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+              ),
+
+              SizedBox(height: 20.h),
+
+              // Manual refresh button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final isVerified =
+                        await controller.checkEmailVerification();
+                    if (isVerified) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Email verified successfully!'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        context.go('/username');
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Email not verified yet. Please check your email.',
+                          ),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: btnColor1,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                  child: Text(
+                    'I\'ve verified my email',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 20.h),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInstruction(String number, String text) {
+    return Row(
+      children: [
+        Container(
+          width: 24.w,
+          height: 24.h,
+          decoration: BoxDecoration(
+            color: btnColor1,
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Center(
+            child: Text(
+              number,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Text(text, style: TextStyle(fontSize: 14.sp, color: subColor)),
+        ),
+      ],
     );
   }
 }

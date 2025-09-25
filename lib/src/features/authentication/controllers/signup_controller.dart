@@ -1,7 +1,9 @@
+// Updated signup_controller.dart with email verification
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'package:cash_lander2/src/services/firebase_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SignupController extends GetxController {
   final emailController = TextEditingController();
@@ -10,17 +12,15 @@ class SignupController extends GetxController {
 
   var isPasswordVisible = false.obs;
   var isConfirmPasswordVisible = false.obs;
-
   var isEmailValid = true.obs;
   var isPasswordValid = true.obs;
   var doPasswordsMatch = true.obs;
   var hasAttemptedSubmit = false.obs;
   var isLoading = false.obs;
 
-  // Store email for OTP verification
+  // Store email for verification
   var userEmail = ''.obs;
 
-  // Get Firebase service instance
   final FirebaseService _firebaseService = FirebaseService.instance;
 
   void togglePasswordVisibility() {
@@ -66,10 +66,7 @@ class SignupController extends GetxController {
 
       final email = emailController.text.trim();
       final password = passwordController.text;
-
-      // Store email for OTP verification
       userEmail.value = email;
-      print('📧 Stored email: $email');
 
       // Create user with Firebase Auth
       print('🔥 Creating Firebase user...');
@@ -78,60 +75,36 @@ class SignupController extends GetxController {
         password,
       );
 
-      print('✅ Firebase user created: ${userCredential?.user?.uid}');
+      if (userCredential?.user != null) {
+        print('✅ Firebase user created: ${userCredential!.user!.uid}');
 
-      if (userCredential != null) {
-        print('📤 Attempting to send OTP...');
+        // Send email verification
+        print('📧 Sending email verification...');
+        await userCredential.user!.sendEmailVerification();
 
-        // Try to send OTP, but don't fail the entire signup if it fails
-        try {
-          await _sendOTPToUser(email);
-          print('✅ OTP sent successfully!');
-        } catch (otpError) {
-          print('⚠️ OTP sending failed, but continuing anyway: $otpError');
+        print('✅ Email verification sent!');
 
-          // Generate fallback OTP
-          try {
-            final otpCode = _firebaseService.generateOTP();
-            await _firebaseService.storeOTPInFirestore(email, otpCode);
-            print('🔐 FALLBACK OTP for $email: $otpCode');
+        // Show success message
+        _showSafeSnackbar(
+          'Account Created',
+          'Please check your email and click the verification link to continue.',
+          Colors.blue,
+        );
 
-            // Use safe snackbar
-            _showSafeSnackbar(
-              'Account Created',
-              'Account created! Check console logs for your verification code.',
-              Colors.blue,
-            );
-          } catch (fallbackError) {
-            print('⚠️ Even fallback failed: $fallbackError');
-            _showSafeSnackbar(
-              'Account Created',
-              'Account created! Please try requesting a new verification code on the next screen.',
-              Colors.orange,
-            );
-          }
-        }
-
-        print('🧭 Navigating to OTP screen...');
-        // ALWAYS navigate to OTP screen if user was created
-        context.go('/otp');
-        print('✅ Navigation completed!');
+        // Navigate to email verification screen
+        print('🧭 Navigating to email verification screen...');
+        context.go('/email-verification');
       }
     } catch (e) {
       print('💥 Signup error: $e');
 
-      // Handle specific errors
       if (e.toString().contains('email-already-in-use') ||
           e.toString().contains('already exists for that email')) {
         _showSafeSnackbar(
-          'Account Exists',
-          'This email is already registered. Taking you to the verification screen.',
-          Colors.orange,
+          'Account Already Exists',
+          'This email is already registered. Please use the login screen instead.',
+          Colors.red,
         );
-
-        // Navigate to OTP screen anyway since account exists
-        userEmail.value = emailController.text.trim();
-        context.go('/otp');
       } else if (e.toString().contains('Network error') ||
           e.toString().contains('network')) {
         _showSafeSnackbar(
@@ -140,7 +113,6 @@ class SignupController extends GetxController {
           Colors.red,
         );
       } else {
-        // Show generic error message
         _showSafeSnackbar('Error', e.toString(), Colors.red);
       }
     } finally {
@@ -149,7 +121,6 @@ class SignupController extends GetxController {
     }
   }
 
-  // Safe snackbar method that won't crash
   void _showSafeSnackbar(String title, String message, Color color) {
     try {
       if (Get.context != null) {
@@ -159,7 +130,7 @@ class SignupController extends GetxController {
           snackPosition: SnackPosition.TOP,
           backgroundColor: color,
           colorText: Colors.white,
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 4),
         );
       } else {
         print('⚠️ Cannot show snackbar - no context available');
@@ -171,28 +142,40 @@ class SignupController extends GetxController {
     }
   }
 
-  Future<void> _sendOTPToUser(String email) async {
+  // Check email verification status
+  Future<bool> checkEmailVerification() async {
     try {
-      print('🔐 Using local OTP generation (Functions disabled for now)');
-
-      // Generate and store OTP locally
-      final otpCode = _firebaseService.generateOTP();
-      await _firebaseService.storeOTPInFirestore(email, otpCode);
-
-      // Print OTP to console for testing
-      print('🔐 OTP for $email: $otpCode');
-
-      Get.snackbar(
-        'OTP Generated',
-        'Your 6-digit verification code: $otpCode\n\nCheck console logs as well.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.blue,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 6),
-      );
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.reload(); // Refresh user data
+        return user.emailVerified;
+      }
+      return false;
     } catch (e) {
-      print('💥 Even local OTP failed: $e');
-      throw 'Failed to generate OTP: ${e.toString()}';
+      print('Error checking email verification: $e');
+      return false;
+    }
+  }
+
+  // Resend verification email
+  Future<void> resendVerificationEmail() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+        _showSafeSnackbar(
+          'Email Sent',
+          'Verification email sent. Please check your inbox.',
+          Colors.blue,
+        );
+      }
+    } catch (e) {
+      print('Error resending email: $e');
+      _showSafeSnackbar(
+        'Error',
+        'Failed to send verification email. Please try again.',
+        Colors.red,
+      );
     }
   }
 }

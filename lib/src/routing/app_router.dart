@@ -1,7 +1,7 @@
-// Updated app_router.dart - Matches your existing BudgetSuccessScreen
+// Updated app_router.dart - Fixed to allow onboarding as first screen
 import 'package:cash_lander2/src/features/authentication/screens/add_expense_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/budget_display_screen.dart';
-import 'package:cash_lander2/src/features/authentication/screens/budget_success_screen.dart'; // ADD THIS IMPORT
+import 'package:cash_lander2/src/features/authentication/screens/budget_success_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/budget_category.dart';
 import 'package:cash_lander2/src/features/authentication/screens/dashboard.dart';
 import 'package:cash_lander2/src/features/authentication/screens/income_category.dart';
@@ -17,27 +17,163 @@ import 'package:cash_lander2/src/features/authentication/screens/username.dart';
 import 'package:cash_lander2/src/features/authentication/models/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final GoRouter appRouter = GoRouter(
+  initialLocation: '/onboarding',
+
+  redirect: (context, state) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final path = state.matchedLocation;
+
+    // Define route categories
+    final publicPages = ['/onboarding']; // Pages anyone can access
+    final authPages = [
+      '/signup',
+      '/login',
+    ]; // Auth-required pages for non-users
+    final emailVerificationPage = '/email-verification';
+    final profileSetupPages = ['/username', '/profile'];
+    final protectedPages = [
+      '/',
+      '/insights',
+      '/addcategory',
+      '/set-budget',
+      '/add-expense',
+      '/budget-display',
+      '/budget-success',
+      '/incomelist',
+    ];
+
+    print(
+      'Redirect check - Path: $path, User: ${user?.uid}, EmailVerified: ${user?.emailVerified}',
+    );
+
+    // Allow public pages (like onboarding) for everyone
+    if (publicPages.contains(path)) {
+      return null; // Always allow onboarding
+    }
+
+    // No user authenticated
+    if (user == null) {
+      if (authPages.contains(path)) {
+        return null; // Allow access to signup/login pages
+      }
+      // For protected pages, redirect to onboarding first (better UX)
+      if (protectedPages.contains(path)) {
+        return '/onboarding';
+      }
+      return null; // Allow other pages
+    }
+
+    // User exists but email not verified
+    if (user != null && !user.emailVerified) {
+      if (path == emailVerificationPage) {
+        return null; // Allow email verification page
+      }
+      return '/email-verification'; // Redirect to email verification
+    }
+
+    // User exists and email is verified - check profile completion
+    if (user != null && user.emailVerified) {
+      try {
+        // Check if user has completed profile setup
+        final userDoc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
+
+        final hasUsername =
+            userDoc.exists &&
+            userDoc.data()?['username'] != null &&
+            userDoc.data()!['username'].toString().trim().isNotEmpty;
+
+        final profileComplete =
+            hasUsername && userDoc.data()?['profileCompleted'] == true;
+
+        print('Has username: $hasUsername, Profile complete: $profileComplete');
+
+        if (profileComplete) {
+          // Full profile is complete - full access granted
+          if (publicPages.contains(path) ||
+              authPages.contains(path) ||
+              path == emailVerificationPage ||
+              profileSetupPages.contains(path)) {
+            return '/'; // Redirect to dashboard
+          }
+          // Allow access to all protected pages
+          return null;
+        } else if (hasUsername && path != '/profile') {
+          // Has username but hasn't seen profile created screen
+          if (publicPages.contains(path) ||
+              authPages.contains(path) ||
+              path == emailVerificationPage) {
+            return '/profile'; // Show profile created screen
+          }
+          if (protectedPages.contains(path)) {
+            return '/profile'; // Block protected pages until profile flow complete
+          }
+          return null; // Allow profile page
+        } else if (!hasUsername) {
+          // Profile incomplete - needs to complete setup
+          if (publicPages.contains(path) ||
+              authPages.contains(path) ||
+              path == emailVerificationPage) {
+            return '/username'; // Redirect to profile setup
+          }
+          if (protectedPages.contains(path)) {
+            return '/username'; // Block protected pages until profile complete
+          }
+          if (profileSetupPages.contains(path)) {
+            return null; // Allow profile setup pages
+          }
+        }
+      } catch (e) {
+        print('Error checking profile completion: $e');
+        // On error, default to profile setup for safety
+        if (publicPages.contains(path) ||
+            authPages.contains(path) ||
+            path == emailVerificationPage) {
+          return '/username';
+        }
+        if (protectedPages.contains(path)) {
+          return '/username';
+        }
+      }
+    }
+
+    return null; // No redirect needed
+  },
+
   routes: [
-    // Authentication routes (no bottom nav)
+    // Public routes
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => OnboardingScreen(),
     ),
+
+    // Authentication routes
     GoRoute(path: '/signup', builder: (context, state) => CreateAccount()),
     GoRoute(path: '/login', builder: (context, state) => LoginScreen()),
-    GoRoute(path: '/otp', builder: (context, state) => OtpScreen()),
+
+    // Email verification route
+    GoRoute(
+      path: '/email-verification',
+      builder: (context, state) => EmailVerificationScreen(),
+    ),
+
+    // Profile setup routes
     GoRoute(path: '/username', builder: (context, state) => UserNamePage()),
     GoRoute(path: '/profile', builder: (context, state) => ProfileCreated()),
 
-    //Create budget paths
+    // Budget creation routes
     GoRoute(
       path: '/addcategory',
       builder: (context, state) => CategoryScreen(),
     ),
     GoRoute(path: '/incomelist', builder: (context, state) => IncomeCategory()),
-
     GoRoute(
       path: '/set-budget',
       builder: (context, state) {
@@ -45,7 +181,8 @@ final GoRouter appRouter = GoRouter(
         return SetBudgetScreen(category: category);
       },
     ),
-    //add expense
+
+    // Expense routes
     GoRoute(
       path: '/add-expense',
       builder: (context, state) {
@@ -58,7 +195,7 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
-    // Success screen with confetti
+    // Budget display routes
     GoRoute(
       path: '/budget-success',
       builder: (context, state) {
@@ -67,18 +204,13 @@ final GoRouter appRouter = GoRouter(
             body: Center(child: Text('Error: No budget data received')),
           );
         }
-
         final data = state.extra as Map<String, dynamic>;
-        return BudgetSuccessScreen(
-          extra: data,
-        ); // This matches your constructor
+        return BudgetSuccessScreen(extra: data);
       },
     ),
-
     GoRoute(
       path: '/budget-display',
       builder: (context, state) {
-        // Safe null handling
         if (state.extra == null) {
           return const Scaffold(
             body: Center(child: Text('Error: No budget data received')),
@@ -86,11 +218,9 @@ final GoRouter appRouter = GoRouter(
         }
 
         final data = state.extra as Map<String, dynamic>;
-
-        // Check if this is first budget and redirect to success screen
         final isFirstBudget = data['isFirstBudget'] ?? false;
+
         if (isFirstBudget) {
-          // Use WidgetsBinding to redirect after build completes
           WidgetsBinding.instance.addPostFrameCallback((_) {
             GoRouter.of(
               context,
@@ -106,6 +236,7 @@ final GoRouter appRouter = GoRouter(
       },
     ),
 
+    // Main app with bottom navigation
     ShellRoute(
       builder: (context, state, child) {
         return MainScreen(child: child);
@@ -121,11 +252,6 @@ final GoRouter appRouter = GoRouter(
           name: 'insights',
           builder: (context, state) => InsightScreen(),
         ),
-        // GoRoute(
-        //   path: '/settings',
-        //   name: 'settings',
-        //   builder: (context, state) => SettingsScreen(),
-        // ),
       ],
     ),
   ],

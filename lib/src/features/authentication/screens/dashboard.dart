@@ -1,8 +1,10 @@
+// Updated dashboard.dart (StatelessWidget with GetX Controller)
 import 'package:cash_lander2/src/common_widgets/budget_progressive_bars.dart';
 import 'package:cash_lander2/src/common_widgets/budgetbuttons.dart';
 import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/constants/images.dart';
 import 'package:cash_lander2/src/constants/text.dart';
+import 'package:cash_lander2/src/features/authentication/controllers/dashboard_controller.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/slider.dart';
 import 'package:cash_lander2/src/services/budget_storage_service.dart';
 import 'package:cash_lander2/widgets/slider_widget.dart';
@@ -17,7 +19,10 @@ class DashBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize the controller
+    // Initialize controllers
+    final DashboardController dashboardController = Get.put(
+      DashboardController(),
+    );
     final ScrollSliderController scrollController = Get.put(
       ScrollSliderController(),
     );
@@ -25,8 +30,9 @@ class DashBoard extends StatelessWidget {
       BudgetStorageService(),
       permanent: true,
     );
+
     return Scaffold(
-      backgroundColor: bgColor1,
+      backgroundColor: Color(0xFFFAFAFA),
       body: SafeArea(
         child: SingleChildScrollView(
           scrollDirection: Axis.vertical,
@@ -43,11 +49,11 @@ class DashBoard extends StatelessWidget {
                     children: [
                       //Profile image
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(19.r),
                         child: Image.asset(
                           avatarImg,
-                          width: 45.w,
-                          height: 45.w,
+                          width: 38.w,
+                          height: 38.w,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -56,14 +62,28 @@ class DashBoard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            //Greeting text
-                            Text(
-                              'Hi, Olive! 👋',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 18.sp,
-                                letterSpacing: -1.sp,
-                              ),
+                            //Greeting text with username using Obx
+                            Obx(
+                              () =>
+                                  dashboardController.isLoadingUserData.value
+                                      ? Container(
+                                        width: 60.w,
+                                        height: 18.h,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade300,
+                                          borderRadius: BorderRadius.circular(
+                                            4.r,
+                                          ),
+                                        ),
+                                      )
+                                      : Text(
+                                        'Hi ${dashboardController.displayName}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16.sp,
+                                          letterSpacing: -1.sp,
+                                        ),
+                                      ),
                             ),
                             Text(
                               dashText1,
@@ -79,61 +99,91 @@ class DashBoard extends StatelessWidget {
                       ),
                       Spacer(),
                       //Notification btn
-                      Stack(
+                      Row(
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              //notification page
-                            },
-                            child: Container(
-                              width: 45.w,
-                              height: 45.h,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Color(0xFFFFFFFF),
-                                    Color(0xFFD6D6D6),
-                                  ],
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color(0x1A000000),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
+                          PhosphorIcon(PhosphorIcons.scan(), size: 24.sp),
+
+                          Stack(
+                            children: [
+                              GestureDetector(
+                                onTap: () {},
+                                child: Container(
+                                  width: 45.w,
+                                  height: 45.h,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.transparent,
                                   ),
-                                ],
+                                  child: PhosphorIcon(
+                                    PhosphorIcons.headset(),
+                                    size: 24.sp,
+                                  ),
+                                ),
                               ),
-                              child: Icon(
-                                PhosphorIcons.bell(),
-                                size: 28.sp,
-                                color: textColor1,
+                              Positioned(
+                                top: 10,
+                                left: 30,
+                                child: Container(
+                                  height: 9.h,
+                                  width: 17.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade50,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '3',
+                                      style: TextStyle(
+                                        fontSize: 9.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                          Positioned(
-                            top: 10,
-                            left: 30,
-                            child: Container(
-                              height: 13.h,
-                              width: 13.w,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.red,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '3',
-                                  style: TextStyle(
-                                    fontSize: 8.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white,
+                          Stack(
+                            children: [
+                              GestureDetector(
+                                onTap: dashboardController.onNotificationTap,
+                                child: Container(
+                                  width: 45.w,
+                                  height: 45.h,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.transparent,
+                                  ),
+                                  child: Icon(
+                                    PhosphorIcons.bell(),
+                                    size: 24.sp,
+                                    color: textColor1,
                                   ),
                                 ),
                               ),
-                            ),
+                              Positioned(
+                                top: 10,
+                                left: 30,
+                                child: Container(
+                                  height: 13.h,
+                                  width: 13.w,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.red,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '3',
+                                      style: TextStyle(
+                                        fontSize: 9.sp,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -142,216 +192,259 @@ class DashBoard extends StatelessWidget {
                 ),
                 SizedBox(height: 20.h),
                 //BALANCE CARD
-                // Updated Balance Card section for your Dashboard
-                // Replace your existing balance card Stack with this:
-
-                //BALANCE CARD
-                Obx(() {
-                  final budgetStorage = Get.find<BudgetStorageService>();
-                  final totalBudget = budgetStorage.totalBudgetAmount;
-                  final totalSpent = budgetStorage.totalSpentAmount;
-                  final totalRemaining = totalBudget - totalSpent;
-
-                  return Stack(
+                Container(
+                  width: 342.w,
+                  height: 72.h,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF007DFE), Color(0xFF0062C8)],
+                      begin: AlignmentGeometry.topCenter,
+                      end: AlignmentGeometry.bottomCenter,
+                    ),
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      width: 1.w,
+                      color: const Color.fromARGB(44, 0, 0, 0),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 327.w,
-                        height: 98.h,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              Color(0xFF130451), // Left end
-                              Color(0xFF286274), // Middle left
-                              Color(0xFF111E33), // Right end
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(15.r),
-                        ),
-                      ),
-                      //shield icon
-                      Positioned(
-                        top: 10.h,
-                        left: 10.w,
-                        child: PhosphorIcon(
-                          PhosphorIconsFill.shieldCheck,
+                      Text(
+                        'Available Balance',
+                        style: TextStyle(
                           color: Colors.white,
-                          size: 15.sp,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      //month budget text
-                      Positioned(
-                        top: 10.h,
-                        left: 30.w,
-                        child: Text(
-                          'Monthly Budget',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: -0.5.sp,
-                          ),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            const TextSpan(
+                              text: '\u20A6',
+                              style: TextStyle(fontFamily: 'Roboto'),
+                            ),
+                            TextSpan(
+                              text: '800,000',
+                              style: const TextStyle(fontFamily: 'Campton'),
+                            ),
+                          ],
                         ),
-                      ),
-                      //eye icon
-                      Positioned(
-                        top: 10.h,
-                        left: 115.w,
-                        child: PhosphorIcon(
-                          PhosphorIconsBold.eye,
+                        style: TextStyle(
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white,
-                          size: 15.sp,
                         ),
-                      ),
-                      //Budget Amount - NOW SHOWS TOTAL OF ALL BUDGETS
-                      Positioned(
-                        top: 36.h,
-                        left: 10.w,
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              const TextSpan(
-                                text: '\u20A6', // ₦
-                                style: TextStyle(fontFamily: 'Roboto'),
-                              ),
-                              TextSpan(
-                                text: totalBudget.toStringAsFixed(0),
-                                style: TextStyle(fontFamily: 'Campton'),
-                              ),
-                            ],
-                          ),
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      //Amount Remaining this month
-                      Positioned(
-                        top: 78.h,
-                        left: 12.w,
-                        child: Text(
-                          totalRemaining > 0
-                              ? '💰 ₦${totalRemaining.toStringAsFixed(0)} remaining'
-                              : totalRemaining < 0
-                              ? '⚠️ ₦${(-totalRemaining).toStringAsFixed(0)} over budget'
-                              : '✅ Budget fully used',
-                          style: TextStyle(
-                            fontSize: 9.sp,
-                            color:
-                                totalRemaining > 0
-                                    ? Colors.green[300]
-                                    : totalRemaining < 0
-                                    ? Colors.red[300]
-                                    : Colors.yellow[300],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      //clock icon
-                      Positioned(
-                        top: 10.h,
-                        left: 195.w,
-                        child: PhosphorIcon(
-                          PhosphorIconsLight.clock,
-                          color: Colors.white,
-                          size: 13.sp,
-                        ),
-                      ),
-                      //history text
-                      Positioned(
-                        top: 11.h,
-                        left: 210.w,
-                        child: GestureDetector(
-                          onTap: () {
-                            //transaction history page
-                          },
-                          child: Text(
-                            'Transaction History',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: -0.5.sp,
-                            ),
-                          ),
-                        ),
-                      ),
-                      //Go to icon
-                      Positioned(
-                        top: 11.h,
-                        left: 300.w,
-                        child: PhosphorIcon(
-                          PhosphorIconsRegular.caretRight,
-                          color: const Color.fromARGB(169, 255, 255, 255),
-                          size: 13.sp,
-                        ),
-                      ),
-                      //Add money button
-                      Positioned(
-                        top: 70.h,
-                        left: 200.w,
-                        child: GestureDetector(
-                          onTap: () {
-                            //add money page
-                          },
-                          child: Container(
-                            width: 110.w,
-                            height: 18.h,
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(237, 255, 255, 255),
-                              borderRadius: BorderRadius.circular(100.r),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '+ Add money',
-                                style: TextStyle(
-                                  color: Color(0xFF130451),
-                                  fontSize: 8.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-                SizedBox(height: 20.h),
-                //add bank
-                Padding(
-                  padding: const EdgeInsets.all(25.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      BudgetButtons(
-                        icon: PhosphorIconsRegular.bank,
-                        onTap: () {},
-                        text: 'Add Bank',
-                      ),
-                      SizedBox(width: 30.w),
-                      BudgetButtons(
-                        icon: PhosphorIconsRegular.folder,
-                        onTap: () {},
-                        text: 'Export Report',
-                      ),
-                      SizedBox(width: 30.w),
-                      BudgetButtons(
-                        icon: PhosphorIconsRegular.trophy,
-                        onTap: () {},
-                        text: 'Set Goals',
                       ),
                     ],
                   ),
                 ),
-                //Goals set sections - YOUR ORIGINAL IMPLEMENTATION
+                SizedBox(height: 25.h),
+                // TOTAL EXPENSE CARD trenddown icon
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 160.w,
+                      height: 90.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  width: 17.w,
+                                  height: 17.h,
+                                  decoration: BoxDecoration(
+                                    color: btnColor1,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Center(
+                                    child: PhosphorIcon(
+                                      PhosphorIconsBold.trendDown,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  child: PhosphorIcon(
+                                    PhosphorIconsRegular.caretRight,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 4),
+                            //text
+                            Text(
+                              'Total expense',
+                              style: TextStyle(
+                                color: Color(0xFF8A8A8A),
+                                fontWeight: FontWeight.w400,
+                                fontSize: 13.sp,
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text: '\u20A6',
+                                    style: TextStyle(fontFamily: 'Roboto'),
+                                  ),
+                                  TextSpan(
+                                    text: '1,000,000',
+                                    style: const TextStyle(
+                                      fontFamily: 'Campton',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    //TOTAL INCOME
+                    Container(
+                      width: 160.w,
+                      height: 90.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  width: 17.w,
+                                  height: 17.h,
+                                  decoration: BoxDecoration(
+                                    color: btnColor1,
+                                    borderRadius: BorderRadius.circular(4.r),
+                                  ),
+                                  child: Center(
+                                    child: PhosphorIcon(
+                                      PhosphorIconsBold.trendUp,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                GestureDetector(
+                                  child: PhosphorIcon(
+                                    PhosphorIconsRegular.caretRight,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 4),
+                            //text
+                            Text(
+                              'Total income',
+                              style: TextStyle(
+                                color: Color(0xFF8A8A8A),
+                                fontWeight: FontWeight.w400,
+                                fontSize: 13.sp,
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text: '\u20A6',
+                                    style: TextStyle(fontFamily: 'Roboto'),
+                                  ),
+                                  TextSpan(
+                                    text: '1,800,000',
+                                    style: const TextStyle(
+                                      fontFamily: 'Campton',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20.h),
+
+                //add bank
+                Container(
+                  width: 343.w,
+                  height: 100.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: 18,
+                      left: 15,
+                      right: 15,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      //crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        BudgetButtons(
+                          icon: PhosphorIconsFill.bank,
+                          onTap: () {},
+                          text: 'Add Bank',
+                        ),
+                        SizedBox(width: 30.w),
+                        BudgetButtons(
+                          icon: PhosphorIconsFill.folder,
+                          onTap: () {},
+                          text: 'Export Report',
+                        ),
+                        SizedBox(width: 30.w),
+                        BudgetButtons(
+                          icon: PhosphorIconsFill.trophy,
+                          onTap: () {},
+                          text: 'Set Goals',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 25.h),
+
+                //Goals set sections
                 SingleChildScrollView(
-                  controller:
-                      scrollController
-                          .scrollController, // Only added the controller
+                  controller: scrollController.scrollController,
                   scrollDirection: Axis.horizontal,
                   child: IntrinsicWidth(
                     child: Row(
@@ -378,11 +471,13 @@ class DashBoard extends StatelessWidget {
                     ),
                   ),
                 ),
-                //slider - RESPONSIVE TO YOUR BUDGETBARS SCROLL
+
+                //slider
                 Padding(
                   padding: EdgeInsets.fromLTRB(80.w, 25.h, 50.w, 30.h),
                   child: SliderWidget(),
                 ),
+
                 //recent transactions
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -395,8 +490,6 @@ class DashBoard extends StatelessWidget {
                         letterSpacing: 0.sp,
                       ),
                     ),
-
-                    //see all recent transaction
                     GestureDetector(
                       onTap: () {},
                       child: Text(
@@ -413,199 +506,197 @@ class DashBoard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 10.h),
-                //transaction containers
-                Stack(
-                  children: [
-                    Container(
-                      width: 328.w,
-                      height: 59.h,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    Positioned(
-                      top: 10.h,
-                      left: 17.w,
-                      child: Container(
-                        width: 40.w,
-                        height: 40.h,
-                        decoration: BoxDecoration(
-                          color: saveColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: PhosphorIcon(
-                            PhosphorIconsFill.piggyBank,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 10.h,
-                      left: 70.w,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Savings',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            'Today',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 10.h,
-                      right: 17.w,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                const TextSpan(
-                                  text: '-\u20A6', // -₦
-                                  style: TextStyle(fontFamily: 'Roboto'),
-                                ),
-                                TextSpan(
-                                  text: '5500',
-                                  style: const TextStyle(fontFamily: 'Campton'),
-                                ),
-                              ],
-                            ),
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-
-                          SizedBox(height: 2.h),
-                          Text(
-                            '30 mins ago',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Stack(
-                  children: [
-                    Container(
-                      width: 328.w,
-                      height: 59.h,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    Positioned(
-                      top: 10.h,
-                      left: 17.w,
-                      child: Container(
-                        width: 40.w,
-                        height: 40.h,
-                        decoration: BoxDecoration(
-                          color: foodColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: PhosphorIcon(
-                            PhosphorIconsFill.bowlFood,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 10.h,
-                      left: 70.w,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Feeding',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            'Yesterday',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 10.h,
-                      right: 17.w,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text.rich(
-                            TextSpan(
-                              children: [
-                                const TextSpan(
-                                  text: '-\u20A6', // -₦
-                                  style: TextStyle(fontFamily: 'Roboto'),
-                                ),
-                                TextSpan(
-                                  text: '10500',
-                                  style: const TextStyle(fontFamily: 'Campton'),
-                                ),
-                              ],
-                            ),
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black,
-                            ),
-                          ),
-
-                          SizedBox(height: 2.h),
-                          Text(
-                            '16:45',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                //transaction containers (keeping your existing implementation)
+                // Stack(
+                //   children: [
+                //     Container(
+                //       width: 328.w,
+                //       height: 59.h,
+                //       decoration: BoxDecoration(
+                //         color: Colors.white,
+                //         borderRadius: BorderRadius.circular(10),
+                //       ),
+                //     ),
+                //     Positioned(
+                //       top: 10.h,
+                //       left: 17.w,
+                //       child: Container(
+                //         width: 40.w,
+                //         height: 40.h,
+                //         decoration: BoxDecoration(
+                //           color: saveColor,
+                //           shape: BoxShape.circle,
+                //         ),
+                //         child: Center(
+                //           child: PhosphorIcon(
+                //             PhosphorIconsFill.piggyBank,
+                //             color: Colors.white,
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //     Positioned(
+                //       top: 10.h,
+                //       left: 70.w,
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         children: [
+                //           Text(
+                //             'Savings',
+                //             style: TextStyle(
+                //               fontSize: 14.sp,
+                //               fontWeight: FontWeight.w500,
+                //               color: Colors.black,
+                //             ),
+                //           ),
+                //           SizedBox(height: 2.h),
+                //           Text(
+                //             'Today',
+                //             style: TextStyle(
+                //               fontSize: 12.sp,
+                //               color: Colors.grey[600],
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //     Positioned(
+                //       top: 10.h,
+                //       right: 17.w,
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.end,
+                //         children: [
+                //           Text.rich(
+                //             TextSpan(
+                //               children: [
+                //                 const TextSpan(
+                //                   text: '-\u20A6',
+                //                   style: TextStyle(fontFamily: 'Roboto'),
+                //                 ),
+                //                 TextSpan(
+                //                   text: '5500',
+                //                   style: const TextStyle(fontFamily: 'Campton'),
+                //                 ),
+                //               ],
+                //             ),
+                //             style: TextStyle(
+                //               fontSize: 14.sp,
+                //               fontWeight: FontWeight.w500,
+                //               color: Colors.black,
+                //             ),
+                //           ),
+                //           SizedBox(height: 2.h),
+                //           Text(
+                //             '30 mins ago',
+                //             style: TextStyle(
+                //               fontSize: 12.sp,
+                //               color: Colors.grey[600],
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //   ],
+                // ),
+                // SizedBox(height: 8.h),
+                // Stack(
+                //   children: [
+                //     Container(
+                //       width: 328.w,
+                //       height: 59.h,
+                //       decoration: BoxDecoration(
+                //         color: Colors.white,
+                //         borderRadius: BorderRadius.circular(10),
+                //       ),
+                //     ),
+                //     Positioned(
+                //       top: 10.h,
+                //       left: 17.w,
+                //       child: Container(
+                //         width: 40.w,
+                //         height: 40.h,
+                //         decoration: BoxDecoration(
+                //           color: foodColor,
+                //           shape: BoxShape.circle,
+                //         ),
+                //         child: Center(
+                //           child: PhosphorIcon(
+                //             PhosphorIconsFill.bowlFood,
+                //             color: Colors.white,
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //     Positioned(
+                //       top: 10.h,
+                //       left: 70.w,
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         children: [
+                //           Text(
+                //             'Feeding',
+                //             style: TextStyle(
+                //               fontSize: 14.sp,
+                //               fontWeight: FontWeight.w500,
+                //               color: Colors.black,
+                //             ),
+                //           ),
+                //           SizedBox(height: 2.h),
+                //           Text(
+                //             'Yesterday',
+                //             style: TextStyle(
+                //               fontSize: 12.sp,
+                //               color: Colors.grey[600],
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //     Positioned(
+                //       top: 10.h,
+                //       right: 17.w,
+                //       child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.end,
+                //         children: [
+                //           Text.rich(
+                //             TextSpan(
+                //               children: [
+                //                 const TextSpan(
+                //                   text: '-\u20A6',
+                //                   style: TextStyle(fontFamily: 'Roboto'),
+                //                 ),
+                //                 TextSpan(
+                //                   text: '10500',
+                //                   style: const TextStyle(fontFamily: 'Campton'),
+                //                 ),
+                //               ],
+                //             ),
+                //             style: TextStyle(
+                //               fontSize: 14.sp,
+                //               fontWeight: FontWeight.w500,
+                //               color: Colors.black,
+                //             ),
+                //           ),
+                //           SizedBox(height: 2.h),
+                //           Text(
+                //             '16:45',
+                //             style: TextStyle(
+                //               fontSize: 12.sp,
+                //               color: Colors.grey[600],
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //   ],
+                // ),
               ],
             ),
           ),
         ),
       ),
       floatingActionButton: Positioned(
-        bottom: 100.h, // Above the navbar
+        bottom: 100.h,
         right: 20.w,
         child: Material(
           elevation: 6,
@@ -614,7 +705,6 @@ class DashBoard extends StatelessWidget {
           child: InkWell(
             customBorder: CircleBorder(),
             onTap: () {
-              // Your action
               context.push('/addcategory');
             },
             child: SizedBox(
