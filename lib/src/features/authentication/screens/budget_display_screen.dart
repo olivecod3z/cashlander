@@ -1,9 +1,10 @@
 import 'package:cash_lander2/src/common_widgets/budget_cate_logo.dart';
 import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/budget_display_controller.dart';
-import 'package:cash_lander2/src/features/authentication/controllers/toggle_controller.dart';
 import 'package:cash_lander2/src/features/authentication/models/expense_model.dart';
+import 'package:cash_lander2/src/features/authentication/models/income_model.dart';
 import 'package:cash_lander2/src/services/budget_storage_service.dart';
+import 'package:cash_lander2/src/services/income_storage_service.dart';
 import 'package:cash_lander2/widgets/toggle.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
@@ -13,17 +14,20 @@ import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'dart:math';
+import 'package:cash_lander2/src/common_widgets/bottom_navbar.dart';
 
 class BudgetDisplayScreen extends StatefulWidget {
-  final BudgetCategory category;
+  final BudgetCategory? category;
   final double budgetAmount;
   final double spentAmount;
+  final bool isIncome;
 
   const BudgetDisplayScreen({
     super.key,
-    required this.category,
-    required this.budgetAmount,
+    this.category,
+    this.budgetAmount = 0.0,
     this.spentAmount = 0.0,
+    this.isIncome = false,
   });
 
   @override
@@ -33,54 +37,49 @@ class BudgetDisplayScreen extends StatefulWidget {
 class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
   late BudgetDisplayController controller;
   late ConfettiController _confettiController;
-  late ToggleController toggleController; // Moved from build()
   bool showContinuingConfetti = false;
+  bool isShowingIncome = false;
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize controllers
+    isShowingIncome = widget.isIncome;
     controller = Get.put(BudgetDisplayController());
-    toggleController = Get.put(ToggleController()); // Moved here
 
-    // Set controller data
-    controller.category = widget.category;
-    controller.budgetAmount = widget.budgetAmount.obs;
-    controller.spentAmount.value = widget.spentAmount;
+    // Only set category if it exists
+    if (widget.category != null) {
+      controller.category = widget.category!;
+      controller.budgetAmount = widget.budgetAmount.obs;
+      controller.spentAmount.value = widget.spentAmount;
 
-    // Initialize confetti
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final budgetStorage = Get.find<BudgetStorageService>();
+        budgetStorage.addUserBudget(
+          widget.category!,
+          widget.budgetAmount,
+          spentAmount: widget.spentAmount,
+        );
+
+        showContinuingConfetti = true;
+        if (mounted) {
+          setState(() {});
+          _confettiController.play();
+        }
+
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            setState(() {
+              showContinuingConfetti = false;
+            });
+          }
+        });
+      });
+    }
+
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 2),
     );
-
-    // FIXED: Defer the budget storage update to after the first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final budgetStorage = Get.find<BudgetStorageService>();
-
-      // Add current budget to user's collection AFTER build is complete
-      budgetStorage.addUserBudget(
-        widget.category,
-        widget.budgetAmount,
-        spentAmount: widget.spentAmount,
-      );
-
-      // Handle confetti
-      showContinuingConfetti = true;
-      if (mounted) {
-        setState(() {}); // Trigger rebuild to show confetti
-        _confettiController.play();
-      }
-
-      // Stop confetti after 2 seconds
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) {
-          setState(() {
-            showContinuingConfetti = false;
-          });
-        }
-      });
-    });
   }
 
   @override
@@ -100,13 +99,16 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                     SizedBox(height: 30.h),
                     Center(
                       child: ExpenseIncomeToggle(
-                        onExpenseSelected: () {
-                          toggleController.toggletoExpense();
-                          context.go('/budget_display');
-                        },
+                        isOnIncomePage: isShowingIncome,
                         onIncomeSelected: () {
-                          toggleController.toggletoIncome();
-                          context.go('/incomelist');
+                          setState(() {
+                            isShowingIncome = true;
+                          });
+                        },
+                        onExpenseSelected: () {
+                          setState(() {
+                            isShowingIncome = false;
+                          });
                         },
                       ),
                     ),
@@ -114,13 +116,14 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                     Text(
                       'Categories',
                       style: TextStyle(
-                        fontSize: 16.sp,
+                        fontSize: 18.sp,
                         color: Color(0xFF666666),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     SizedBox(height: 10.h),
-                    _buildBudgetGrid(),
+                    // Show different grid based on toggle state
+                    isShowingIncome ? _buildIncomeGrid() : _buildBudgetGrid(),
                     SizedBox(height: 32.h),
                   ],
                 ),
@@ -154,10 +157,14 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
             ),
         ],
       ),
-      // FIXED: Proper FloatingActionButton instead of Positioned
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          context.push('/addcategory');
+          // Navigate based on current view
+          if (isShowingIncome) {
+            context.push('/incomelist');
+          } else {
+            context.push('/addcategory');
+          }
         },
         backgroundColor: btnColor1,
         child: PhosphorIcon(
@@ -167,6 +174,7 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: BottomNavbar(),
     );
   }
 
@@ -202,11 +210,18 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
     );
   }
 
-  /// FIXED: Budget Grid using reactive Obx
+  /// Budget Grid (Expenses) using reactive Obx
   Widget _buildBudgetGrid() {
     return Obx(() {
       final budgetStorage = Get.find<BudgetStorageService>();
-      final budgets = budgetStorage.userBudgets; // RxList - stays reactive
+      final budgets = budgetStorage.userBudgets;
+
+      if (budgets.isEmpty) {
+        return _buildEmptyState(
+          'No expense budgets yet',
+          'Tap + to create one',
+        );
+      }
 
       return GridView.builder(
         shrinkWrap: true,
@@ -230,6 +245,71 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
     });
   }
 
+  /// Income Grid - Placeholder for now
+  /// Income Grid - now properly reads from IncomeStorageService
+  Widget _buildIncomeGrid() {
+    return Obx(() {
+      final incomeStorage = Get.find<IncomeStorageService>();
+      final incomes = incomeStorage.userIncomes;
+
+      if (incomes.isEmpty) {
+        return _buildEmptyState('No income sources yet', 'Tap + to add income');
+      }
+
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12.w,
+          mainAxisSpacing: 12.h,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: incomes.length,
+        itemBuilder: (context, index) {
+          final incomeData = incomes[index];
+          return _buildIncomeCard(
+            incomeData['category'] as IncomeCategory,
+            incomeData['incomeAmount'] as double,
+            incomeData['receivedAmount'] as double,
+          );
+        },
+      );
+    });
+  }
+
+  /// Empty state widget
+  Widget _buildEmptyState(String title, String subtitle) {
+    return Container(
+      height: 200.h,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            PhosphorIconsRegular.wallet,
+            size: 48.sp,
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            subtitle,
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBudgetCard(
     BudgetCategory category,
     double budgetAmount,
@@ -240,7 +320,6 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
 
     return GestureDetector(
       onTap: () {
-        // Navigate to add expense screen with category data
         context.push(
           '/add-expense',
           extra: {
@@ -264,25 +343,19 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
         ),
         child: Stack(
           children: [
-            // Main content using Column for consistency
             Column(
               children: [
-                // Top spacer to accommodate the menu button
                 SizedBox(height: 20.h),
-                // Main content - this will be consistent across all cards
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Category Icon
                       BudgetCategoryLogo(
                         icon: category.icon,
                         color: category.color,
                         size: 35.w,
                       ),
-
                       SizedBox(height: 6.h),
-                      // Category Name - Fixed height container
                       Container(
                         height: 18.h,
                         alignment: Alignment.center,
@@ -298,9 +371,7 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-
                       SizedBox(height: 2.h),
-                      // Period
                       Text(
                         'Monthly',
                         style: TextStyle(
@@ -309,9 +380,7 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                           color: Color(0xFF45413C),
                         ),
                       ),
-
                       SizedBox(height: 8.h),
-                      // Circular Progress
                       CircularPercentIndicator(
                         radius: 35.0.w,
                         lineWidth: 3.5.w,
@@ -319,7 +388,6 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                         center: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Budget amount
                             Container(
                               height: 14.h,
                               alignment: Alignment.center,
@@ -348,8 +416,6 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                                 ),
                               ),
                             ),
-
-                            // Percentage
                             Container(
                               height: 10.h,
                               alignment: Alignment.center,
@@ -374,13 +440,9 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                     ],
                   ),
                 ),
-
-                // Bottom spacer
                 SizedBox(height: 4.h),
               ],
             ),
-
-            // Triple-dot menu positioned at top-right
             Positioned(
               top: -4.h,
               right: -4.w,
@@ -390,13 +452,10 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
                 onSelected: (value) {
                   switch (value) {
                     case 'details':
-                      // Handle view details
                       break;
                     case 'edit':
-                      // Handle edit budget
                       break;
                     case 'delete':
-                      // Handle delete budget
                       break;
                   }
                 },
@@ -420,10 +479,185 @@ class _BudgetDisplayScreenState extends State<BudgetDisplayScreen> {
     );
   }
 
-  // Custom star-shaped particles
+  Widget _buildIncomeCard(
+    IncomeCategory category,
+    double incomeAmount,
+    double receivedAmount,
+  ) {
+    final progressPercentage =
+        incomeAmount > 0
+            ? (receivedAmount / incomeAmount).clamp(0.0, 1.0)
+            : 0.0;
+
+    return GestureDetector(
+      onTap: () {
+        // Navigate to income detail or edit screen
+        // context.push('/income-detail', extra: {...});
+      },
+      child: Container(
+        width: 163.w,
+        height: 250.h,
+        padding: EdgeInsets.all(8.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(
+            color: const Color.fromARGB(68, 200, 199, 199),
+            width: 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                SizedBox(height: 20.h),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 45.w,
+                        height: 45.h,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: category.incColor,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            category.incIcon,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 6.h),
+                      Container(
+                        height: 18.h,
+                        alignment: Alignment.center,
+                        child: Text(
+                          category.incName,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        'Monthly',
+                        style: TextStyle(
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF45413C),
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      CircularPercentIndicator(
+                        radius: 35.0.w,
+                        lineWidth: 3.5.w,
+                        percent: progressPercentage,
+                        center: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              height: 14.h,
+                              alignment: Alignment.center,
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: '\u20A6',
+                                      style: TextStyle(
+                                        fontFamily: 'Roboto',
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: incomeAmount.toStringAsFixed(0),
+                                      style: TextStyle(
+                                        fontFamily: 'Campton',
+                                        fontSize: 10.sp,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              height: 10.h,
+                              alignment: Alignment.center,
+                              child: Text(
+                                '${(progressPercentage * 100).toStringAsFixed(0)}%',
+                                style: TextStyle(
+                                  fontSize: 7.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: category.incColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        progressColor: category.incColor,
+                        backgroundColor: Colors.grey[200]!,
+                        circularStrokeCap: CircularStrokeCap.round,
+                        animation: true,
+                        animationDuration: 1200,
+                        curve: Curves.easeInOutCubic,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 4.h),
+              ],
+            ),
+            Positioned(
+              top: -4.h,
+              right: -4.w,
+              child: PopupMenuButton<String>(
+                padding: EdgeInsets.zero,
+                icon: Icon(Icons.more_vert, size: 18, color: Colors.black),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'details':
+                      break;
+                    case 'edit':
+                      break;
+                    case 'delete':
+                      final incomeStorage = Get.find<IncomeStorageService>();
+                      incomeStorage.removeIncome(category.incName);
+                      break;
+                  }
+                },
+                itemBuilder:
+                    (context) => const [
+                      PopupMenuItem(
+                        value: 'details',
+                        child: Text('View details'),
+                      ),
+                      PopupMenuItem(value: 'edit', child: Text('Edit income')),
+                      PopupMenuItem(value: 'delete', child: Text('Delete')),
+                    ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Path _drawStar(Size size) {
     double degToRad(double deg) => deg * (pi / 180.0);
-
     const numberOfPoints = 5;
     final halfWidth = size.width / 2;
     final externalRadius = halfWidth;

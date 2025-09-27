@@ -1,4 +1,4 @@
-// Fixed CategoryScreen - No more GetX errors
+// Fixed CategoryScreen - Swapped callbacks to match swapped labels
 import 'package:cash_lander2/data/category_data.dart';
 import 'package:cash_lander2/src/common_widgets/budget_cate_logo.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/toggle_controller.dart';
@@ -15,12 +15,15 @@ class CategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ToggleController toggleController = Get.put(ToggleController());
+    //final ToggleController toggleController = Get.put(ToggleController());
     // Initialize BudgetStorageService
     final BudgetStorageService budgetStorage = Get.put(
       BudgetStorageService(),
       permanent: true,
     );
+
+    // Set initial state - CategoryScreen is Expense, so isIncome should be false
+    //toggleController.setInitialState(false);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -49,15 +52,16 @@ class CategoryScreen extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 40.w),
-                  //Expense to Income toggle
+                  //Expense to Income toggle - SWAPPED CALLBACKS
                   ExpenseIncomeToggle(
-                    onExpenseSelected: () {
-                      toggleController.toggletoExpense();
-                      context.go('/addcategory');
-                    },
+                    isOnIncomePage: false,
                     onIncomeSelected: () {
-                      toggleController.toggletoIncome();
+                      //toggleController.toggletoIncome(); // ← Fixed
                       context.go('/incomelist');
+                    },
+                    onExpenseSelected: () {
+                      //toggleController.toggletoExpense(); // ← Fixed
+                      context.go('/addcategory');
                     },
                   ),
                 ],

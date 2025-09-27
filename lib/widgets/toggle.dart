@@ -1,18 +1,20 @@
-import 'package:cash_lander2/src/features/authentication/controllers/toggle_controller.dart';
+//import 'package:cash_lander2/src/features/authentication/controllers/toggle_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class ExpenseIncomeToggle extends StatelessWidget {
-  final ToggleController controller = Get.find<ToggleController>();
   final VoidCallback onExpenseSelected;
   final VoidCallback onIncomeSelected;
+  final bool isOnIncomePage;
 
   ExpenseIncomeToggle({
     super.key,
     required this.onExpenseSelected,
     required this.onIncomeSelected,
+    required this.isOnIncomePage,
   });
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -24,50 +26,25 @@ class ExpenseIncomeToggle extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          //animated sliding indicator
-          Obx(
-            () => AnimatedPositioned(
-              duration: Duration(milliseconds: 200),
-              curve: Curves.easeInOut,
-              left: controller.isIncome.value ? 109.w : 3.w,
-              top: 3.h,
-              child: Container(
-                height: 20.5.h,
-                width: 91.w,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
+          // Use AnimatedAlign instead
+          AnimatedAlign(
+            duration: Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            alignment:
+                isOnIncomePage ? Alignment.centerLeft : Alignment.centerRight,
+            child: Container(
+              margin: EdgeInsets.all(3.w),
+              height: 20.5.h,
+              width: 91.w,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20.r),
               ),
             ),
           ),
 
-          //toggle texts and btn
-          //Expense button
           Row(
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: onExpenseSelected,
-                  child: Container(
-                    height: 40.h,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Expense',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              //Income button
               Expanded(
                 child: GestureDetector(
                   onTap: onIncomeSelected,
@@ -79,6 +56,27 @@ class ExpenseIncomeToggle extends StatelessWidget {
                     child: Center(
                       child: Text(
                         'Income',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: onExpenseSelected,
+                  child: Container(
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Expense',
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 14.sp,

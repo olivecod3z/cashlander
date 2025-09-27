@@ -6,17 +6,17 @@ import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class BottomNavbar extends StatelessWidget {
-  //const BottomNavbar({super.key});
   final BottombarController controller = Get.put(BottombarController());
 
   BottomNavbar({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 100.h,
       padding: EdgeInsets.only(bottom: 20.h),
       decoration: BoxDecoration(
-        color: Color(0xFFF2F2F2),
+        color: Color(0xFFFAFAFA),
         boxShadow: [
           BoxShadow(
             color: Colors.black12,
@@ -33,22 +33,22 @@ class BottomNavbar extends StatelessWidget {
             children: [
               _buildNavItem(
                 context: context,
-                icon: PhosphorIconsRegular.house,
-                label: 'Home',
+                iconRegular: PhosphorIconsRegular.house,
+                iconFilled: PhosphorIconsFill.house,
                 index: 0,
                 isSelected: controller.selectedIndex.value == 0,
               ),
               _buildNavItem(
                 context: context,
-                icon: PhosphorIconsRegular.chartBar,
-                label: 'Insights',
+                iconRegular: PhosphorIconsRegular.chartBar,
+                iconFilled: PhosphorIconsFill.chartBar,
                 index: 1,
                 isSelected: controller.selectedIndex.value == 1,
               ),
               _buildNavItem(
                 context: context,
-                icon: PhosphorIconsRegular.gear,
-                label: 'Settings',
+                iconRegular: PhosphorIconsRegular.gear,
+                iconFilled: PhosphorIconsFill.gear,
                 index: 2,
                 isSelected: controller.selectedIndex.value == 2,
               ),
@@ -61,8 +61,8 @@ class BottomNavbar extends StatelessWidget {
 
   Widget _buildNavItem({
     required BuildContext context,
-    required IconData icon,
-    required String label,
+    required IconData iconRegular,
+    required IconData iconFilled,
     required int index,
     required bool isSelected,
   }) {
@@ -95,21 +95,11 @@ class BottomNavbar extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             PhosphorIcon(
-              icon,
+              isSelected ? iconFilled : iconRegular,
               color: isSelected ? Colors.blue : Colors.black,
               size: 20.sp,
             ),
-            if (isSelected) ...[
-              SizedBox(width: 4.w),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 11.sp,
-                ),
-              ),
-            ],
+            if (isSelected) ...[SizedBox(width: 4.w)],
           ],
         ),
       ),

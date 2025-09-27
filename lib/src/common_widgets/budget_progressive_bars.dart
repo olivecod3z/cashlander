@@ -102,7 +102,7 @@ class BudgetBars extends StatelessWidget {
               ],
             ),
             style: TextStyle(
-              color: const Color(0xFF118E00),
+              color: btnColor1,
               fontWeight: FontWeight.w600,
               fontSize: 9.sp,
             ),
@@ -126,7 +126,7 @@ class BudgetBars extends StatelessWidget {
               ],
             ),
             style: TextStyle(
-              color: const Color(0xFF118E00),
+              color: btnColor1,
               fontWeight: FontWeight.w600,
               fontSize: 9.sp,
             ),
@@ -142,7 +142,7 @@ class BudgetBars extends StatelessWidget {
             child: LinearPercentIndicator(
               lineHeight: 4.h,
               percent: amountSaved / targetAmount, // 62%
-              progressColor: Color(0xFF2DBE05),
+              progressColor: btnColor3,
               backgroundColor: Colors.grey[300],
               barRadius: Radius.circular(8),
               padding: EdgeInsets.zero,

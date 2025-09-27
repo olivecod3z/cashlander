@@ -1,4 +1,4 @@
-// Updated app_router.dart - Fixed to allow onboarding as first screen
+import 'package:cash_lander2/src/features/authentication/models/income_model.dart';
 import 'package:cash_lander2/src/features/authentication/screens/add_expense_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/budget_display_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/budget_success_screen.dart';
@@ -12,6 +12,7 @@ import 'package:cash_lander2/src/features/authentication/screens/onboarding_scre
 import 'package:cash_lander2/src/features/authentication/screens/otp_screen.dart';
 import 'package:cash_lander2/src/features/authentication/screens/profile_created.dart';
 import 'package:cash_lander2/src/features/authentication/screens/set_budget.dart';
+import 'package:cash_lander2/src/features/authentication/screens/set_income.dart';
 import 'package:cash_lander2/src/features/authentication/screens/signupii.dart';
 import 'package:cash_lander2/src/features/authentication/screens/username.dart';
 import 'package:cash_lander2/src/features/authentication/models/expense_model.dart';
@@ -19,9 +20,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/onboarding',
+  initialLocation: '/', // Changed to dashboard as default
+
+  refreshListenable: GoRouterRefreshStream(
+    FirebaseAuth.instance.authStateChanges(),
+  ),
 
   redirect: (context, state) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -173,12 +179,22 @@ final GoRouter appRouter = GoRouter(
       path: '/addcategory',
       builder: (context, state) => CategoryScreen(),
     ),
-    GoRoute(path: '/incomelist', builder: (context, state) => IncomeCategory()),
+    GoRoute(
+      path: '/incomelist',
+      builder: (context, state) => IncomeListScreen(),
+    ),
     GoRoute(
       path: '/set-budget',
       builder: (context, state) {
         final category = state.extra as BudgetCategory;
         return SetBudgetScreen(category: category);
+      },
+    ),
+    GoRoute(
+      path: '/set-income',
+      builder: (context, state) {
+        final category = state.extra as IncomeCategory;
+        return SetIncomeScreen(category: category);
       },
     ),
 
@@ -211,15 +227,21 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/budget-display',
       builder: (context, state) {
-        if (state.extra == null) {
-          return const Scaffold(
-            body: Center(child: Text('Error: No budget data received')),
+        final data = state.extra as Map<String, dynamic>?;
+
+        // Handle null state
+        if (data == null) {
+          // Navigate to empty budget display (showing income view by default)
+          return const BudgetDisplayScreen(
+            category: null,
+            budgetAmount: 0.0,
+            spentAmount: 0.0,
+            isIncome: false,
           );
         }
 
-        final data = state.extra as Map<String, dynamic>;
+        // Handle first budget creation flow
         final isFirstBudget = data['isFirstBudget'] ?? false;
-
         if (isFirstBudget) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             GoRouter.of(
@@ -229,9 +251,10 @@ final GoRouter appRouter = GoRouter(
         }
 
         return BudgetDisplayScreen(
-          category: data['category'] as BudgetCategory,
-          budgetAmount: data['budgetAmount'] as double,
+          category: data['category'] as BudgetCategory?, // Make it nullable
+          budgetAmount: data['budgetAmount'] as double? ?? 0.0,
           spentAmount: data['spentAmount'] as double? ?? 0.0,
+          isIncome: data['isIncome'] as bool? ?? false,
         );
       },
     ),
@@ -256,3 +279,21 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+
+// Helper class to refresh router on auth state changes
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}

@@ -1,3 +1,4 @@
+import 'package:cash_lander2/src/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -21,7 +22,7 @@ class SliderWidget extends StatelessWidget {
             width: (controller.scrollProgress.value * 50.w) + 100.w,
             height: 3.h,
             decoration: BoxDecoration(
-              color: Color(0xFF0400FE),
+              color: btnColor1,
               borderRadius: BorderRadius.circular(3.r),
             ),
           ),

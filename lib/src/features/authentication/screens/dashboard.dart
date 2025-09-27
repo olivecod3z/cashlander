@@ -7,6 +7,7 @@ import 'package:cash_lander2/src/constants/text.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/dashboard_controller.dart';
 import 'package:cash_lander2/src/features/authentication/controllers/slider.dart';
 import 'package:cash_lander2/src/services/budget_storage_service.dart';
+import 'package:cash_lander2/src/services/income_storage_service.dart';
 import 'package:cash_lander2/widgets/slider_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -30,7 +31,11 @@ class DashBoard extends StatelessWidget {
       BudgetStorageService(),
       permanent: true,
     );
-
+    final IncomeStorageService incomeStorage = Get.put(
+      IncomeStorageService(),
+      permanent: true,
+    );
+    //add incomestorageservices here
     return Scaffold(
       backgroundColor: Color(0xFFFAFAFA),
       body: SafeArea(
@@ -219,23 +224,26 @@ class DashBoard extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            const TextSpan(
-                              text: '\u20A6',
-                              style: TextStyle(fontFamily: 'Roboto'),
-                            ),
-                            TextSpan(
-                              text: '800,000',
-                              style: const TextStyle(fontFamily: 'Campton'),
-                            ),
-                          ],
-                        ),
-                        style: TextStyle(
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                      Obx(
+                        () => Text.rich(
+                          TextSpan(
+                            children: [
+                              const TextSpan(
+                                text: '\u20A6',
+                                style: TextStyle(fontFamily: 'Roboto'),
+                              ),
+                              TextSpan(
+                                text: dashboardController.formatCurrency(
+                                  dashboardController.availableBalance.value,
+                                ),
+                              ),
+                            ],
+                          ),
+                          style: TextStyle(
+                            fontSize: 24.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -296,25 +304,26 @@ class DashBoard extends StatelessWidget {
                               ),
                             ),
                             SizedBox(height: 4),
-                            Text.rich(
-                              TextSpan(
-                                children: [
-                                  const TextSpan(
-                                    text: '\u20A6',
-                                    style: TextStyle(fontFamily: 'Roboto'),
-                                  ),
-                                  TextSpan(
-                                    text: '1,000,000',
-                                    style: const TextStyle(
-                                      fontFamily: 'Campton',
+                            Obx(
+                              () => Text.rich(
+                                TextSpan(
+                                  children: [
+                                    const TextSpan(
+                                      text: '\u20A6',
+                                      style: TextStyle(fontFamily: 'Roboto'),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black,
+                                    TextSpan(
+                                      text: dashboardController.formatCurrency(
+                                        dashboardController.totalExpense.value,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ],
@@ -372,25 +381,26 @@ class DashBoard extends StatelessWidget {
                               ),
                             ),
                             SizedBox(height: 4),
-                            Text.rich(
-                              TextSpan(
-                                children: [
-                                  const TextSpan(
-                                    text: '\u20A6',
-                                    style: TextStyle(fontFamily: 'Roboto'),
-                                  ),
-                                  TextSpan(
-                                    text: '1,800,000',
-                                    style: const TextStyle(
-                                      fontFamily: 'Campton',
+                            Obx(
+                              () => Text.rich(
+                                TextSpan(
+                                  children: [
+                                    const TextSpan(
+                                      text: '\u20A6',
+                                      style: TextStyle(fontFamily: 'Roboto'),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.black,
+                                    TextSpan(
+                                      text: dashboardController.formatCurrency(
+                                        dashboardController.totalIncome.value,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                ),
                               ),
                             ),
                           ],
@@ -486,8 +496,8 @@ class DashBoard extends StatelessWidget {
                       'Recent Transactions',
                       style: TextStyle(
                         fontSize: 19.sp,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.sp,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.7.sp,
                       ),
                     ),
                     GestureDetector(
@@ -497,9 +507,7 @@ class DashBoard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 17.sp,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF007DFE),
-                          decoration: TextDecoration.underline,
-                          decorationColor: Color(0xFF007DFE),
+                          color: btnColor3,
                         ),
                       ),
                     ),
@@ -705,7 +713,7 @@ class DashBoard extends StatelessWidget {
           child: InkWell(
             customBorder: CircleBorder(),
             onTap: () {
-              context.push('/addcategory');
+              context.push('/incomelist');
             },
             child: SizedBox(
               width: 56.w,

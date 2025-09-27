@@ -9,6 +9,6 @@ class IncomeCategory {
     required this.incName,
     required this.incIcon,
     required this.incColor,
-    required this.incSubCategories,
+    this.incSubCategories = const [],
   });
 }

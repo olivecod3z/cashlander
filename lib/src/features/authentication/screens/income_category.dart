@@ -8,12 +8,12 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 //import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-class IncomeCategory extends StatelessWidget {
-  const IncomeCategory({super.key});
+class IncomeListScreen extends StatelessWidget {
+  const IncomeListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final ToggleController toggleController = Get.put(ToggleController());
+    // final ToggleController toggleController = Get.put(ToggleController());
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -43,13 +43,14 @@ class IncomeCategory extends StatelessWidget {
                   SizedBox(width: 40.w),
                   //Expense to Income toggle
                   ExpenseIncomeToggle(
-                    onExpenseSelected: () {
-                      toggleController.toggletoExpense();
-                      context.go('/addcategory');
-                    },
+                    isOnIncomePage: true,
                     onIncomeSelected: () {
-                      toggleController.toggletoIncome();
+                      // toggleController.toggletoIncome(); // ← Fixed
                       context.go('/incomelist');
+                    },
+                    onExpenseSelected: () {
+                      // toggleController.toggletoExpense(); // ← Fixed
+                      context.go('/addcategory');
                     },
                   ),
                 ],
@@ -91,11 +92,25 @@ class IncomeCategory extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    trailing: IconButton(
-                      onPressed: () {
-                        //Navigator.push(context, MaterialPageRoute(builder: (context) => SetBudgetScreen(category: category)))
-                      },
-                      icon: Icon(Icons.add),
+                    trailing: Container(
+                      width: 40.w,
+                      height: 40.h,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey[50],
+                        border: Border.all(color: Colors.grey[300]!, width: 1),
+                      ),
+                      child: IconButton(
+                        onPressed: () {
+                          // Navigate to create new budget
+                          context.push('/set-income', extra: category);
+                        },
+                        icon: Icon(
+                          Icons.add,
+                          color: Colors.grey[600],
+                          size: 20,
+                        ),
+                      ),
                     ),
                   );
                 },
